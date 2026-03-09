@@ -73,7 +73,7 @@ OSネイティブシェルを直接実行し、AIコーディングエージェ�
 ## Requirements
 
 - Obsidian v1.5.0+（デスクトップ版のみ）
-- macOS 12+ / Windows 10+ / Linux
+- macOS 12+（検証済み）/ Windows 10+（未検証）/ Linux（未検証）
 
 > **Note:** Intel Mac (darwin-x64) は非サポート。Apple Silicon (arm64) のみ対応。
 

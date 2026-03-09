@@ -118,11 +118,13 @@ export class TerminalView extends ItemView {
     const cwd = settings.defaultCwd || this.deps.vaultPath;
 
     // Step 7: Create session
+    // Launch as login shell so /etc/zprofile (Homebrew PATH etc.) is sourced
+    const shellArgs = ["--login"];
     const profile = {
       id: "default",
       name: "Default Shell",
       shellPath: shell,
-      shellArgs: [],
+      shellArgs,
       cwd,
       icon: "terminal",
     };
@@ -130,7 +132,7 @@ export class TerminalView extends ItemView {
     const { cols, rows } = this.renderer.resize();
     const sessionInfo = this.deps.sessionManager.create(
       this.deps.ptyManager,
-      { shell, args: [], cwd, cols, rows, env: {} },
+      { shell, args: shellArgs, cwd, cols, rows, env: {} },
       profile,
     );
     this.sessionId = sessionInfo.id;

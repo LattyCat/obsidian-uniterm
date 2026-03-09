@@ -306,7 +306,7 @@ describe("TerminalView", () => {
       expect(callArgs[1]).toEqual(expect.objectContaining({
         cols: 80,
         rows: 24,
-        args: [],
+        args: ["--login"],
         env: {},
       }));
       expect(callArgs[2]).toEqual(expect.objectContaining({

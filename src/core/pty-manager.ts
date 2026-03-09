@@ -124,7 +124,17 @@ export class PtyManager {
   /** Spawn a new PTY process with the given options */
   spawn(options: PtySpawnOptions): PtyProcess {
     // Electron renderer may have a minimal PATH; ensure common paths are included
-    const defaultPath = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+    const home = process.env.HOME || "";
+    const defaultPath = [
+      "/opt/homebrew/bin",
+      "/opt/homebrew/sbin",
+      home ? `${home}/.cargo/bin` : "",
+      "/usr/local/bin",
+      "/usr/bin",
+      "/bin",
+      "/usr/sbin",
+      "/sbin",
+    ].filter(Boolean).join(":");
     const currentPath = process.env.PATH || "";
     const env: Record<string, string> = {
       ...process.env,

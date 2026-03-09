@@ -11,7 +11,7 @@ export class TerminalSettingTab extends PluginSettingTab {
   private settingsPlugin: SettingsTabPlugin;
 
   constructor(app: any, plugin: SettingsTabPlugin) {
-    super(app, plugin);
+    super(app, plugin as any);
     this.settingsPlugin = plugin;
   }
 

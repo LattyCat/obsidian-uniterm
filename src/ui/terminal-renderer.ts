@@ -50,6 +50,7 @@ export class TerminalRenderer {
       cursorBlink: options.cursorBlink,
       scrollback: options.scrollback,
       lineHeight: options.lineHeight,
+      allowProposedApi: true,
     });
 
     this.flowController = new FlowController({

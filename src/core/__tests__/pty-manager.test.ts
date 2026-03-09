@@ -93,8 +93,9 @@ describe("PtyManager", () => {
       const spawnCall = mockPtyModule.spawn.mock.calls[0];
       const passedEnv = spawnCall[2].env;
       expect(passedEnv.MY_CUSTOM_VAR).toBe("hello");
-      // process.env should be merged in
-      expect(passedEnv.PATH).toBe(process.env.PATH);
+      // process.env should be merged in, with default paths appended
+      expect(passedEnv.PATH).toContain(process.env.PATH!);
+      expect(passedEnv.PATH).toContain("/usr/local/bin");
     });
   });
 

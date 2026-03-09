@@ -44,7 +44,6 @@ describe("Type contracts", () => {
       defaultCwd: "",
       maxTabs: 10,
       autoShow: false,
-      confirmCodeblockExecution: true,
       scrollbackBuffer: 10000,
       fontFamily: "monospace",
       fontSize: 14,

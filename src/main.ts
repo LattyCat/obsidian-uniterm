@@ -23,7 +23,13 @@ export default class TerminalPlugin extends Plugin {
     this.settings = await loadSettings(this);
     this.logger = createLogger(this.settings.debugLog);
 
-    const { pty, error } = loadNodePty();
+    const vaultBasePath = (this.app.vault as any).adapter?.basePath || "";
+    const manifestDir = this.manifest.dir || "";
+    // Build absolute plugin path without require("path") (esbuild externalizes it)
+    const pluginDir = manifestDir
+      ? vaultBasePath + "/" + manifestDir
+      : undefined;
+    const { pty, error } = loadNodePty(pluginDir);
     this.ptyManager = pty ? new PtyManager(pty) : null;
     if (error) this.logger.error(error);
 
@@ -63,7 +69,8 @@ export default class TerminalPlugin extends Plugin {
     if (existing.length > 0) {
       this.app.workspace.revealLeaf(existing[0]);
     } else {
-      const leaf = this.app.workspace.getRightLeaf(false);
+      // Open in bottom panel (like VSCode's integrated terminal)
+      const leaf = this.app.workspace.getLeaf("split", "horizontal");
       if (leaf) {
         await leaf.setViewState({
           type: VIEW_TYPE_TERMINAL,

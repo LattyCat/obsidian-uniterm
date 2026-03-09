@@ -118,11 +118,13 @@ export class TerminalView extends ItemView {
     const cwd = settings.defaultCwd || this.deps.vaultPath;
 
     // Step 7: Create session
+    // Launch as login shell so /etc/zprofile (Homebrew PATH etc.) is sourced
+    const shellArgs = ["--login"];
     const profile = {
       id: "default",
       name: "Default Shell",
       shellPath: shell,
-      shellArgs: [],
+      shellArgs,
       cwd,
       icon: "terminal",
     };
@@ -130,7 +132,7 @@ export class TerminalView extends ItemView {
     const { cols, rows } = this.renderer.resize();
     const sessionInfo = this.deps.sessionManager.create(
       this.deps.ptyManager,
-      { shell, args: [], cwd, cols, rows, env: {} },
+      { shell, args: shellArgs, cwd, cols, rows, env: {} },
       profile,
     );
     this.sessionId = sessionInfo.id;
@@ -190,20 +192,35 @@ export class TerminalView extends ItemView {
     this.containerPanel.setAttribute("role", "application");
     this.containerPanel.setAttribute("aria-label", "Terminal");
 
-    // Auto-focus
+    // Step 14: Click-to-focus handler
+    this.containerPanel.addEventListener("click", () => {
+      this.focusManager?.focus();
+    });
+
+    // Auto-focus after DOM is ready
+    const term = this.renderer.getTerminal();
     this.focusManager.focus();
+    setTimeout(() => {
+      term.focus();
+    }, 200);
   }
 
   async onClose(): Promise<void> {
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
 
+    // Destroy PTY session first (before renderer dispose)
+    this.ptyProcess = null;
     if (this.sessionId) {
       await this.deps.sessionManager.destroy(this.sessionId);
       this.sessionId = null;
     }
 
-    this.renderer?.dispose();
+    try {
+      this.renderer?.dispose();
+    } catch {
+      // Ignore xterm disposal errors (e.g. WebGL context already lost)
+    }
     this.renderer = null;
 
     this.focusManager?.dispose();
@@ -236,6 +253,7 @@ export class TerminalView extends ItemView {
   /** Focus the terminal */
   focusTerminal(): void {
     this.focusManager?.focus();
+    this.renderer?.getTerminal().focus();
   }
 
   /** Unfocus the terminal */

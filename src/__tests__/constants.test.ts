@@ -64,10 +64,6 @@ describe("DEFAULT_SETTINGS", () => {
     expect(DEFAULT_SETTINGS.autoShow).toBe(false);
   });
 
-  it("has confirmCodeblockExecution enabled", () => {
-    expect(DEFAULT_SETTINGS.confirmCodeblockExecution).toBe(true);
-  });
-
   it("has debugLog disabled", () => {
     expect(DEFAULT_SETTINGS.debugLog).toBe(false);
   });

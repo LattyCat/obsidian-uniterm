@@ -63,6 +63,28 @@ const LIGHT_PALETTE: ThemeColors = {
   white: "#fafafa",
 };
 
+/**
+ * Resolve a CSS color string (which may contain calc() or var()) to a
+ * simple rgba() value that xterm.js can understand, using the browser's
+ * own CSS engine.  Returns "" if resolution fails.
+ */
+function resolveColor(raw: string): string {
+  if (!raw) return "";
+  // Simple hex / rgb / rgba values don't need resolution
+  if (/^(#|rgb)/.test(raw)) return raw;
+  try {
+    const el = document.createElement("div");
+    el.style.color = raw;
+    el.style.display = "none";
+    document.body.appendChild(el);
+    const resolved = getComputedStyle(el).color; // always returns rgb()/rgba()
+    el.remove();
+    return resolved || "";
+  } catch {
+    return "";
+  }
+}
+
 export class ThemeManager {
   private styleProvider: ComputedStyleProvider;
 
@@ -91,7 +113,9 @@ export class ThemeManager {
     const bg = style.getPropertyValue("--background-primary").trim() || DARK_PALETTE.background;
     const fg = style.getPropertyValue("--text-normal").trim() || DARK_PALETTE.foreground;
     const accent = style.getPropertyValue("--interactive-accent").trim() || DARK_PALETTE.cursor;
-    const selection = style.getPropertyValue("--text-selection").trim() || DARK_PALETTE.selectionBackground;
+    const selectionRaw = style.getPropertyValue("--text-selection").trim();
+    // xterm.js cannot parse CSS calc() in color values; resolve via the browser
+    const selection = resolveColor(selectionRaw) || DARK_PALETTE.selectionBackground;
 
     return {
       background: bg,

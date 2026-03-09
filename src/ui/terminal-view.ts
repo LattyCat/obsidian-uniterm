@@ -108,10 +108,7 @@ export class TerminalView extends ItemView {
     this.renderer.mount(this.containerPanel);
 
     // Step 5: Apply theme
-    const themeColors = settings.theme === "obsidian"
-      ? this.deps.themeManager.getObsidianTheme(document.body)
-      : this.deps.themeManager.getThemeColors(settings.theme, settings.customThemeColors);
-    this.renderer.getTerminal().options.theme = themeColors;
+    this.applyTheme();
 
     // Step 6: Detect shell
     const shell = settings.defaultShell || detectDefaultShell(this.deps.platform);
@@ -236,6 +233,16 @@ export class TerminalView extends ItemView {
       this.containerPanel.remove();
       this.containerPanel = null;
     }
+  }
+
+  /** Reapply theme colors to the terminal */
+  applyTheme(): void {
+    if (!this.renderer) return;
+    const settings = this.deps.getLatestSettings();
+    const themeColors = settings.theme === "obsidian"
+      ? this.deps.themeManager.getObsidianTheme(document.body)
+      : this.deps.themeManager.getThemeColors(settings.theme, settings.customThemeColors);
+    this.renderer.getTerminal().options.theme = themeColors;
   }
 
   /** Clear the terminal content */

@@ -221,6 +221,30 @@ describe("TerminalPlugin", () => {
     });
   });
 
+  describe("onThemeChange()", () => {
+    it("calls applyTheme() on all terminal views when css-change fires", async () => {
+      const mockApplyTheme = vi.fn();
+      const mockView = { applyTheme: mockApplyTheme };
+      const mockLeaves = [{ view: mockView }, { view: { applyTheme: mockApplyTheme } }];
+      mockGetLeavesOfType.mockReturnValue(mockLeaves);
+
+      await plugin.onload();
+
+      // Extract the css-change callback
+      const cssChangeCall = mockOn.mock.calls.find(
+        (call: any[]) => call[0] === "css-change"
+      );
+      expect(cssChangeCall).toBeDefined();
+      const cssChangeCallback = cssChangeCall![1];
+
+      // Fire the callback
+      cssChangeCallback();
+
+      expect(mockGetLeavesOfType).toHaveBeenCalledWith(VIEW_TYPE_TERMINAL);
+      expect(mockApplyTheme).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe("updateSettings()", () => {
     it("updates settings and saves", async () => {
       const { saveSettings } = await import("../settings/settings-data");

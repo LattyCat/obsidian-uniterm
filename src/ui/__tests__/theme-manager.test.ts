@@ -151,6 +151,31 @@ describe("ThemeManager", () => {
       const colors = tm.getObsidianTheme({} as Element);
       expect(colors.selectionBackground).toBe("#custom-sel");
     });
+
+    it("uses LIGHT_PALETTE ANSI colors when rootEl has theme-light class", () => {
+      const lightRoot = { classList: { contains: (c: string) => c === "theme-light" } } as unknown as Element;
+      const colors = manager.getObsidianTheme(lightRoot);
+      expect(colors.yellow).toBe("#c18401");
+      expect(colors.red).toBe("#e45649");
+      expect(colors.green).toBe("#50a14f");
+      expect(colors.blue).toBe("#4078f2");
+    });
+
+    it("uses DARK_PALETTE ANSI colors when rootEl has theme-dark class", () => {
+      const darkRoot = { classList: { contains: (c: string) => c === "theme-dark" } } as unknown as Element;
+      const colors = manager.getObsidianTheme(darkRoot);
+      expect(colors.yellow).toBe("#e5e510");
+      expect(colors.red).toBe("#cd3131");
+      expect(colors.green).toBe("#0dbc79");
+      expect(colors.blue).toBe("#2472c8");
+    });
+
+    it("falls back to DARK_PALETTE when classList is absent", () => {
+      const noClassList = {} as Element;
+      const colors = manager.getObsidianTheme(noClassList);
+      expect(colors.yellow).toBe("#e5e510");
+      expect(colors.red).toBe("#cd3131");
+    });
   });
 
   it("theme colors object has all required ANSI color fields", () => {

@@ -110,26 +110,29 @@ export class ThemeManager {
   /** Extract theme colors from Obsidian's CSS variables */
   getObsidianTheme(rootEl: Element): ThemeColors {
     const style = this.styleProvider.getComputedStyle(rootEl);
-    const bg = style.getPropertyValue("--background-primary").trim() || DARK_PALETTE.background;
-    const fg = style.getPropertyValue("--text-normal").trim() || DARK_PALETTE.foreground;
-    const accent = style.getPropertyValue("--interactive-accent").trim() || DARK_PALETTE.cursor;
+    const isLight = rootEl.classList?.contains("theme-light") ?? false;
+    const palette = isLight ? LIGHT_PALETTE : DARK_PALETTE;
+
+    const bg = style.getPropertyValue("--background-primary").trim() || palette.background;
+    const fg = style.getPropertyValue("--text-normal").trim() || palette.foreground;
+    const accent = style.getPropertyValue("--interactive-accent").trim() || palette.cursor;
     const selectionRaw = style.getPropertyValue("--text-selection").trim();
     // xterm.js cannot parse CSS calc() in color values; resolve via the browser
-    const selection = resolveColor(selectionRaw) || DARK_PALETTE.selectionBackground;
+    const selection = resolveColor(selectionRaw) || palette.selectionBackground;
 
     return {
       background: bg,
       foreground: fg,
       cursor: accent,
       selectionBackground: selection,
-      black: DARK_PALETTE.black,
-      red: DARK_PALETTE.red,
-      green: DARK_PALETTE.green,
-      yellow: DARK_PALETTE.yellow,
-      blue: DARK_PALETTE.blue,
-      magenta: DARK_PALETTE.magenta,
-      cyan: DARK_PALETTE.cyan,
-      white: DARK_PALETTE.white,
+      black: palette.black,
+      red: palette.red,
+      green: palette.green,
+      yellow: palette.yellow,
+      blue: palette.blue,
+      magenta: palette.magenta,
+      cyan: palette.cyan,
+      white: palette.white,
     };
   }
 

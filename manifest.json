@@ -1,0 +1,9 @@
+{
+  "id": "obsidian-terminal",
+  "name": "Terminal",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Integrated terminal with AI agent support for Obsidian",
+  "author": "Atsushi",
+  "isDesktopOnly": true
+}

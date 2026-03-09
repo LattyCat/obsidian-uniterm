@@ -1,0 +1,66 @@
+/* ==========================================================================
+   Obsidian Terminal Plugin - Styles
+   ========================================================================== */
+
+/* --- Terminal Panel Container --- */
+
+.terminal-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 100px;
+  overflow: hidden;
+}
+
+/* --- xterm.js Container --- */
+
+.terminal-panel .xterm {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.terminal-panel .xterm-viewport {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.terminal-panel .xterm-screen {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Obsidian Theme Interference Prevention --- */
+
+.terminal-panel *,
+.terminal-panel *::before,
+.terminal-panel *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Prevent Obsidian from styling elements inside the terminal */
+.terminal-panel .xterm-rows {
+  line-height: normal;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+
+/* Hide xterm.js scrollbar — use xterm's built-in scrollbar instead */
+.terminal-panel .xterm-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- Focus Management (Spec Section 5.4) --- */
+
+body.terminal-focused .workspace-leaf:not(.terminal-leaf) {
+  pointer-events: none;
+}

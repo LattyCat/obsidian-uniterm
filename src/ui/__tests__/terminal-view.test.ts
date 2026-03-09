@@ -532,6 +532,50 @@ describe("TerminalView", () => {
     });
   });
 
+  describe("applyTheme()", () => {
+    it("reapplies obsidian theme to terminal options", async () => {
+      const mockThemeColors = { background: "#reapplied" };
+      const deps = createMockDeps();
+      (deps.themeManager.getObsidianTheme as any).mockReturnValue(mockThemeColors);
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      // Clear previous calls
+      (deps.themeManager.getObsidianTheme as any).mockClear();
+      (deps.themeManager.getObsidianTheme as any).mockReturnValue(mockThemeColors);
+
+      view.applyTheme();
+
+      expect(deps.themeManager.getObsidianTheme).toHaveBeenCalledWith(document.body);
+      expect(mockTerminal.options.theme).toBe(mockThemeColors);
+    });
+
+    it("applies non-obsidian theme via getThemeColors", async () => {
+      const customSettings = { ...DEFAULT_SETTINGS, theme: "dark" as const, consentGiven: true };
+      const mockThemeColors = { background: "#dark-reapplied" };
+      const deps = createMockDeps({
+        getLatestSettings: vi.fn(() => customSettings),
+      });
+      (deps.themeManager.getThemeColors as any).mockReturnValue(mockThemeColors);
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      (deps.themeManager.getThemeColors as any).mockClear();
+      (deps.themeManager.getThemeColors as any).mockReturnValue(mockThemeColors);
+
+      view.applyTheme();
+
+      expect(deps.themeManager.getThemeColors).toHaveBeenCalledWith("dark", customSettings.customThemeColors);
+      expect(mockTerminal.options.theme).toBe(mockThemeColors);
+    });
+
+    it("does nothing when renderer is null", () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      expect(() => view.applyTheme()).not.toThrow();
+    });
+  });
+
   describe("unfocusTerminal()", () => {
     it("calls focusManager.unfocus()", async () => {
       const deps = createMockDeps();

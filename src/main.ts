@@ -106,8 +106,11 @@ export default class TerminalPlugin extends Plugin {
   }
 
   private onThemeChange(): void {
-    // Theme changes are handled by views on next interaction
-    this.logger.debug("Theme change detected");
+    this.logger.debug("Theme change detected, reapplying to all views");
+    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
+    for (const leaf of leaves) {
+      (leaf.view as TerminalView).applyTheme();
+    }
   }
 
   /** Update settings and persist */

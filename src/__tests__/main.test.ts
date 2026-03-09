@@ -65,6 +65,10 @@ vi.mock("../integration/obsidian-commands", () => ({
   registerCommands: vi.fn(),
 }));
 
+vi.mock("../settings/settings-tab", () => ({
+  TerminalSettingTab: vi.fn(),
+}));
+
 import TerminalPlugin from "../main";
 import { VIEW_TYPE_TERMINAL } from "../constants";
 import { loadNodePty } from "../core/electron-bridge";
@@ -72,6 +76,7 @@ import { loadSettings } from "../settings/settings-data";
 import { registerCommands } from "../integration/obsidian-commands";
 import { createLogger } from "../core/logger";
 import { ThemeManager } from "../ui/theme-manager";
+import { TerminalSettingTab } from "../settings/settings-tab";
 
 describe("TerminalPlugin", () => {
   let plugin: TerminalPlugin;
@@ -178,6 +183,13 @@ describe("TerminalPlugin", () => {
       await plugin.onload();
       expect(mockOn).toHaveBeenCalledWith("css-change", expect.any(Function));
     });
+
+    it("registers TerminalSettingTab", async () => {
+      const addSettingTabSpy = vi.spyOn(plugin, "addSettingTab" as any);
+      await plugin.onload();
+      expect(addSettingTabSpy).toHaveBeenCalledTimes(1);
+      expect(TerminalSettingTab).toHaveBeenCalledWith(plugin.app, plugin);
+    });
   });
 
   describe("onunload()", () => {
@@ -216,6 +228,30 @@ describe("TerminalPlugin", () => {
       await plugin.updateSettings({ fontSize: 16 });
       expect(plugin.settings.fontSize).toBe(16);
       expect(saveSettings).toHaveBeenCalled();
+    });
+
+    it("notifies active terminal views with applySettings", async () => {
+      const mockApplySettings = vi.fn();
+      const mockView = { applySettings: mockApplySettings };
+      const mockLeaf = { view: mockView };
+      mockGetLeavesOfType.mockReturnValue([mockLeaf]);
+
+      await plugin.onload();
+      await plugin.updateSettings({ fontSize: 18 });
+
+      expect(mockApplySettings).toHaveBeenCalledWith(
+        expect.objectContaining({ fontSize: 18 })
+      );
+    });
+
+    it("skips views without applySettings method", async () => {
+      const mockView = {}; // no applySettings
+      const mockLeaf = { view: mockView };
+      mockGetLeavesOfType.mockReturnValue([mockLeaf]);
+
+      await plugin.onload();
+      // Should not throw
+      await expect(plugin.updateSettings({ fontSize: 18 })).resolves.not.toThrow();
     });
   });
 });

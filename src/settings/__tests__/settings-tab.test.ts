@@ -146,9 +146,16 @@ describe("TerminalSettingTab", () => {
     expect(names).toContain("Default working directory");
   });
 
-  it("creates correct number of settings (3 headings + 12 settings = 15)", () => {
+  it("display() includes Line height setting", () => {
+    const settingSpy = vi.spyOn(Setting.prototype, "setName");
+    tab.display();
+    const names = settingSpy.mock.calls.map((c) => c[0]);
+    expect(names).toContain("Line height");
+  });
+
+  it("creates correct number of settings (3 headings + 13 settings = 16)", () => {
     tab.display();
     const container = (tab as any).containerEl;
-    expect(container.children.length).toBe(15);
+    expect(container.children.length).toBe(16);
   });
 });

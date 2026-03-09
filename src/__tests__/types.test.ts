@@ -6,6 +6,7 @@ import type {
   ElectronBridgeResult,
   PtySpawnOptions,
   SessionInfo,
+  PassthroughKeybinding,
 } from "../types";
 
 describe("SessionState enum", () => {
@@ -53,10 +54,26 @@ describe("Type contracts", () => {
       theme: "obsidian",
       webglRenderer: true,
       shellProfiles: [],
+      shiftEnterSequence: "\x1b\r",
+      passthroughKeybindings: [],
       debugLog: false,
     };
     expect(settings.cursorStyle).toBe("block");
     expect(settings.theme).toBe("obsidian");
+    expect(settings.shiftEnterSequence).toBe("\x1b\r");
+    expect(settings.passthroughKeybindings).toEqual([]);
+  });
+
+  it("PassthroughKeybinding has required and optional fields", () => {
+    const binding: PassthroughKeybinding = {
+      key: "p",
+      ctrlKey: true,
+    };
+    expect(binding.key).toBe("p");
+    expect(binding.ctrlKey).toBe(true);
+    expect(binding.shiftKey).toBeUndefined();
+    expect(binding.altKey).toBeUndefined();
+    expect(binding.metaKey).toBeUndefined();
   });
 
   it("ElectronBridgeResult can represent success", () => {

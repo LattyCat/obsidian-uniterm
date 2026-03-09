@@ -4,6 +4,9 @@ import {
   LOG_PREFIX,
   SHUTDOWN_TIMEOUT_MS,
   DEFAULT_SETTINGS,
+  DEFAULT_SHIFT_ENTER_SEQUENCE,
+  DEFAULT_PASSTHROUGH_KEYBINDINGS,
+  PRESET_PROFILES,
 } from "../constants";
 
 describe("VIEW_TYPE_TERMINAL", () => {
@@ -79,5 +82,53 @@ describe("DEFAULT_SETTINGS", () => {
 
   it("has cursorBlink enabled", () => {
     expect(DEFAULT_SETTINGS.cursorBlink).toBe(true);
+  });
+
+  it("has default shiftEnterSequence", () => {
+    expect(DEFAULT_SETTINGS.shiftEnterSequence).toBe(
+      DEFAULT_SHIFT_ENTER_SEQUENCE
+    );
+  });
+
+  it("has default passthroughKeybindings", () => {
+    expect(DEFAULT_SETTINGS.passthroughKeybindings).toEqual(
+      DEFAULT_PASSTHROUGH_KEYBINDINGS
+    );
+  });
+});
+
+describe("DEFAULT_SHIFT_ENTER_SEQUENCE", () => {
+  it("is ESC + CR", () => {
+    expect(DEFAULT_SHIFT_ENTER_SEQUENCE).toBe("\x1b\r");
+  });
+});
+
+describe("DEFAULT_PASSTHROUGH_KEYBINDINGS", () => {
+  it("includes Ctrl+P", () => {
+    expect(DEFAULT_PASSTHROUGH_KEYBINDINGS).toContainEqual({
+      key: "p",
+      ctrlKey: true,
+    });
+  });
+});
+
+describe("PRESET_PROFILES", () => {
+  it("has 5 preset profiles", () => {
+    expect(PRESET_PROFILES).toHaveLength(5);
+  });
+
+  it("includes default, claude-code, codex-cli, gemini-cli, git", () => {
+    const ids = PRESET_PROFILES.map((p) => p.id);
+    expect(ids).toContain("default");
+    expect(ids).toContain("claude-code");
+    expect(ids).toContain("codex-cli");
+    expect(ids).toContain("gemini-cli");
+    expect(ids).toContain("git");
+  });
+
+  it("all presets have empty shellPath for auto-detect", () => {
+    for (const profile of PRESET_PROFILES) {
+      expect(profile.shellPath).toBe("");
+    }
   });
 });

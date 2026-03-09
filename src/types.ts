@@ -33,6 +33,8 @@ export interface TerminalSettings {
   theme: "obsidian" | "dark" | "light" | "custom";
   webglRenderer: boolean;
   shellProfiles: ShellProfile[];
+  shiftEnterSequence: string;
+  passthroughKeybindings: PassthroughKeybinding[];
   debugLog: boolean;
 }
 
@@ -50,6 +52,15 @@ export interface PtySpawnOptions {
   cols: number;
   rows: number;
   env: Record<string, string>;
+}
+
+/** Keybinding definition for keys that should be passed through to Obsidian */
+export interface PassthroughKeybinding {
+  key: string;
+  ctrlKey?: boolean;
+  shiftKey?: boolean;
+  altKey?: boolean;
+  metaKey?: boolean;
 }
 
 /** Session info exposed to UI */

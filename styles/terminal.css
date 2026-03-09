@@ -64,3 +64,49 @@
 body.terminal-focused .workspace-leaf:not(.terminal-leaf) {
   pointer-events: none;
 }
+
+/* --- Search Bar --- */
+
+.terminal-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.terminal-search-input {
+  padding: 2px 6px;
+  font-size: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 3px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  outline: none;
+  min-width: 160px;
+}
+
+.terminal-search-input:focus {
+  border-color: var(--interactive-accent);
+}
+
+.terminal-search-btn {
+  padding: 2px 6px;
+  font-size: 12px;
+  background: transparent;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 3px;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.terminal-search-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}

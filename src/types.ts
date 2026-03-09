@@ -23,7 +23,6 @@ export interface TerminalSettings {
   defaultCwd: string;
   maxTabs: number;
   autoShow: boolean;
-  confirmCodeblockExecution: boolean;
   scrollbackBuffer: number;
   fontFamily: string;
   fontSize: number;

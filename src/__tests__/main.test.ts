@@ -42,7 +42,6 @@ vi.mock("../settings/settings-data", () => ({
     defaultCwd: "",
     maxTabs: 10,
     autoShow: false,
-    confirmCodeblockExecution: true,
     scrollbackBuffer: 10000,
     fontFamily: "Menlo",
     fontSize: 14,

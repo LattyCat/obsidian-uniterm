@@ -191,21 +191,16 @@ export class TerminalView extends ItemView {
     this.containerPanel.setAttribute("aria-label", "Terminal");
 
     // Step 14: Click-to-focus handler
-    const focusTerminal = () => {
-      const term = this.renderer?.getTerminal();
-      if (!term) return;
-      term.focus();
-      const textarea = this.containerPanel?.querySelector("textarea.xterm-helper-textarea") as HTMLTextAreaElement | null;
-      textarea?.focus();
+    this.containerPanel.addEventListener("click", () => {
       this.focusManager?.focus();
-    };
-
-    this.containerPanel.addEventListener("mousedown", focusTerminal);
-    this.containerPanel.addEventListener("click", focusTerminal);
+    });
 
     // Auto-focus after DOM is ready
+    const term = this.renderer.getTerminal();
     this.focusManager.focus();
-    setTimeout(focusTerminal, 200);
+    setTimeout(() => {
+      term.focus();
+    }, 200);
   }
 
   async onClose(): Promise<void> {

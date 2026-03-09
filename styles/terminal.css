@@ -59,11 +59,7 @@
   display: none;
 }
 
-/* --- Focus Management (Spec Section 5.4) --- */
-
-body.terminal-focused .workspace-leaf:not(.terminal-leaf) {
-  pointer-events: none;
-}
+/* --- Focus Management --- */
 
 /* --- Search Bar --- */
 

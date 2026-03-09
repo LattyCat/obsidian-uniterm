@@ -60,7 +60,6 @@ export const DEFAULT_SETTINGS: TerminalSettings = {
   defaultCwd: "",
   maxTabs: 10,
   autoShow: false,
-  confirmCodeblockExecution: true,
   scrollbackBuffer: 10000,
   fontFamily: "Menlo, Monaco, Consolas, monospace",
   fontSize: 14,

@@ -543,4 +543,59 @@ describe("TerminalView", () => {
       expect(mockFocusInstance.unfocus).toHaveBeenCalledTimes(1);
     });
   });
+
+  // ---- applySettings ----
+
+  describe("applySettings()", () => {
+    it("updates terminal options with new settings", async () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      const newSettings = { ...DEFAULT_SETTINGS, fontSize: 18, fontFamily: "Fira Code", lineHeight: 1.5, cursorStyle: "bar" as const, cursorBlink: false, consentGiven: true };
+      view.applySettings(newSettings);
+
+      expect(mockTerminal.options.fontSize).toBe(18);
+      expect(mockTerminal.options.fontFamily).toBe("Fira Code");
+      expect(mockTerminal.options.lineHeight).toBe(1.5);
+      expect(mockTerminal.options.cursorStyle).toBe("bar");
+      expect(mockTerminal.options.cursorBlink).toBe(false);
+    });
+
+    it("applies theme via themeManager", async () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      // Clear calls from onOpen
+      (deps.themeManager.getObsidianTheme as any).mockClear();
+
+      const newSettings = { ...DEFAULT_SETTINGS, theme: "obsidian" as const, consentGiven: true };
+      view.applySettings(newSettings);
+
+      expect(deps.themeManager.getObsidianTheme).toHaveBeenCalledWith(document.body);
+    });
+
+    it("calls renderer.resize() and ptyProcess.resize()", async () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      mockRendererInstance.resize.mockClear();
+      mockPtyProcess.resize.mockClear();
+
+      view.applySettings({ ...DEFAULT_SETTINGS, consentGiven: true });
+
+      // resize is called twice: once for re-layout, once for getting cols/rows
+      expect(mockRendererInstance.resize).toHaveBeenCalled();
+      expect(mockPtyProcess.resize).toHaveBeenCalledWith(80, 24);
+    });
+
+    it("does nothing when renderer is null", () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      // No onOpen called
+      expect(() => view.applySettings({ ...DEFAULT_SETTINGS, consentGiven: true })).not.toThrow();
+    });
+  });
 });

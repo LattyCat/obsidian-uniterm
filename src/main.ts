@@ -10,6 +10,7 @@ import { createLogger } from "./core/logger";
 import type { Logger } from "./core/logger";
 import { loadSettings, saveSettings } from "./settings/settings-data";
 import { registerCommands } from "./integration/obsidian-commands";
+import { TerminalSettingTab } from "./settings/settings-tab";
 import type { TerminalSettings } from "./types";
 
 export default class TerminalPlugin extends Plugin {
@@ -53,6 +54,8 @@ export default class TerminalPlugin extends Plugin {
     this.addRibbonIcon("terminal", "Open Terminal", () => {
       this.toggleTerminalPanel();
     });
+
+    this.addSettingTab(new TerminalSettingTab(this.app, this));
 
     this.registerEvent(
       this.app.workspace.on("css-change", () => this.onThemeChange())
@@ -110,9 +113,20 @@ export default class TerminalPlugin extends Plugin {
     this.logger.debug("Theme change detected");
   }
 
-  /** Update settings and persist */
+  /** Update settings and persist, then notify active terminal views */
   async updateSettings(updates: Partial<TerminalSettings>): Promise<void> {
     Object.assign(this.settings, updates);
     await saveSettings(this, this.settings);
+    this.applySettingsToViews();
+  }
+
+  private applySettingsToViews(): void {
+    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
+    for (const leaf of leaves) {
+      const view = leaf.view as TerminalView;
+      if (view && typeof view.applySettings === "function") {
+        view.applySettings(this.settings);
+      }
+    }
   }
 }

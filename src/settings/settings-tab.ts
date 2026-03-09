@@ -85,6 +85,19 @@ export class TerminalSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("Line height")
+      .setDesc("Terminal line height multiplier.")
+      .addSlider((slider) =>
+        slider
+          .setLimits(0.8, 2.0, 0.1)
+          .setValue(this.settingsPlugin.settings.lineHeight)
+          .setDynamicTooltip()
+          .onChange(async (value: number) => {
+            await this.settingsPlugin.updateSettings({ lineHeight: value });
+          })
+      );
+
+    new Setting(containerEl)
       .setName("Cursor style")
       .setDesc("Terminal cursor appearance.")
       .addDropdown((dropdown) =>

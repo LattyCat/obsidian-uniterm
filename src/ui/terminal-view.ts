@@ -260,4 +260,29 @@ export class TerminalView extends ItemView {
   unfocusTerminal(): void {
     this.focusManager?.unfocus();
   }
+
+  /** Apply updated settings to the running terminal */
+  applySettings(settings: TerminalSettings): void {
+    if (!this.renderer) return;
+
+    const terminal = this.renderer.getTerminal();
+    terminal.options.fontSize = settings.fontSize;
+    terminal.options.fontFamily = settings.fontFamily;
+    terminal.options.lineHeight = settings.lineHeight;
+    terminal.options.cursorStyle = settings.cursorStyle;
+    terminal.options.cursorBlink = settings.cursorBlink;
+
+    // Apply theme
+    const themeColors = settings.theme === "obsidian"
+      ? this.deps.themeManager.getObsidianTheme(document.body)
+      : this.deps.themeManager.getThemeColors(settings.theme, settings.customThemeColors);
+    terminal.options.theme = themeColors;
+
+    // Re-layout after font/size changes
+    this.renderer.resize();
+    if (this.ptyProcess) {
+      const { cols, rows } = this.renderer.resize();
+      this.ptyProcess.resize(cols, rows);
+    }
+  }
 }

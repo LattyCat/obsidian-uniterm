@@ -40,6 +40,7 @@ export class KeybindingHandler {
     if (event.type !== "keydown") {
       if (event.type === "keyup" && this.handledKeys.has(keyId)) {
         this.handledKeys.delete(keyId);
+        this.suppressEvent(event);
         return false;
       }
       return true;
@@ -49,6 +50,7 @@ export class KeybindingHandler {
     if (event.shiftKey && event.key === "Enter") {
       this.writeToPty(this.shiftEnterSequence);
       this.handledKeys.add(keyId);
+      this.suppressEvent(event);
       return false;
     }
 
@@ -57,6 +59,7 @@ export class KeybindingHandler {
       if (action.match(event)) {
         action.execute();
         this.handledKeys.add(keyId);
+        this.suppressEvent(event);
         return false;
       }
     }
@@ -70,6 +73,7 @@ export class KeybindingHandler {
     if (event.ctrlKey && event.key === "Escape") {
       this.focusManager.unfocus();
       this.handledKeys.add(keyId);
+      this.suppressEvent(event);
       return false;
     }
 
@@ -85,6 +89,11 @@ export class KeybindingHandler {
 
     // Rule 8: Default - let xterm handle
     return true;
+  }
+
+  private suppressEvent(event: KeyboardEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
   }
 
   private keyId(event: KeyboardEvent): string {

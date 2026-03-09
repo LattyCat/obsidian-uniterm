@@ -9,7 +9,10 @@ function createEvent(
   type: string,
   init: KeyboardEventInit = {},
 ): KeyboardEvent {
-  return new KeyboardEvent(type, init);
+  const event = new KeyboardEvent(type, init);
+  vi.spyOn(event, "preventDefault");
+  vi.spyOn(event, "stopPropagation");
+  return event;
 }
 
 function keyId(e: KeyboardEvent): string {
@@ -31,7 +34,7 @@ describe("KeybindingHandler", () => {
     handler = new KeybindingHandler({
       writeToPty,
       focusManager: { unfocus },
-      shiftEnterSequence: "\\n",
+      shiftEnterSequence: "\x1b\r",
       passthroughKeybindings: defaultPassthrough,
       platform: "darwin",
     });
@@ -56,6 +59,8 @@ describe("KeybindingHandler", () => {
       // Now keyup for the same key combo should return false and remove from set
       const keyup = createEvent("keyup", { key: "Enter", shiftKey: true });
       expect(handler.handle(keyup)).toBe(false);
+      expect(keyup.preventDefault).toHaveBeenCalled();
+      expect(keyup.stopPropagation).toHaveBeenCalled();
     });
 
     it("removes key from handledKeys after keyup", () => {
@@ -89,8 +94,10 @@ describe("KeybindingHandler", () => {
       });
       const result = handler.handle(event);
 
-      expect(writeToPty).toHaveBeenCalledWith("\\n");
+      expect(writeToPty).toHaveBeenCalledWith("\x1b\r");
       expect(result).toBe(false);
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.stopPropagation).toHaveBeenCalled();
     });
 
     it("adds key to handledKeys", () => {
@@ -122,6 +129,8 @@ describe("KeybindingHandler", () => {
 
       expect(execute).toHaveBeenCalled();
       expect(result).toBe(false);
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.stopPropagation).toHaveBeenCalled();
     });
 
     it("does not execute non-matching actions", () => {
@@ -179,6 +188,7 @@ describe("KeybindingHandler", () => {
     it("returns false for matching passthrough keybinding (Ctrl+P)", () => {
       const event = createEvent("keydown", { key: "p", ctrlKey: true });
       expect(handler.handle(event)).toBe(false);
+      expect(event.preventDefault).not.toHaveBeenCalled();
     });
 
     it("returns true when passthrough does not match", () => {
@@ -190,7 +200,7 @@ describe("KeybindingHandler", () => {
       const h = new KeybindingHandler({
         writeToPty: vi.fn(),
         focusManager: { unfocus: vi.fn() },
-        shiftEnterSequence: "\\n",
+        shiftEnterSequence: "\x1b\r",
         passthroughKeybindings: [
           { key: "s", ctrlKey: true, shiftKey: true },
         ],
@@ -228,6 +238,8 @@ describe("KeybindingHandler", () => {
 
       expect(unfocus).toHaveBeenCalled();
       expect(result).toBe(false);
+      expect(event.preventDefault).toHaveBeenCalled();
+      expect(event.stopPropagation).toHaveBeenCalled();
     });
 
     it("adds key to handledKeys", () => {
@@ -248,6 +260,7 @@ describe("KeybindingHandler", () => {
     it("returns false when metaKey is pressed", () => {
       const event = createEvent("keydown", { key: "c", metaKey: true });
       expect(handler.handle(event)).toBe(false);
+      expect(event.preventDefault).not.toHaveBeenCalled();
     });
 
     it("returns false for any key with meta modifier", () => {
@@ -266,6 +279,7 @@ describe("KeybindingHandler", () => {
         shiftKey: true,
       });
       expect(handler.handle(event)).toBe(false);
+      expect(event.preventDefault).not.toHaveBeenCalled();
     });
 
     it("returns false for Ctrl+Shift+C", () => {

@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Build output
+main.js
+styles.css
+*.js.map
+
+# Obsidian plugin dev
+data.json
+
+# Native module builds
+prebuilds/
+build/
+Release/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+
+# Tasks (local planning)
+tasks/

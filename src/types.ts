@@ -36,6 +36,9 @@ export interface TerminalSettings {
   shiftEnterSequence: string;
   passthroughKeybindings: PassthroughKeybinding[];
   debugLog: boolean;
+  consentGiven: boolean;
+  customThemeColors: CustomThemeColors;
+  screenReaderMode: boolean;
 }
 
 /** Electron bridge result for loading native modules */
@@ -61,6 +64,22 @@ export interface PassthroughKeybinding {
   shiftKey?: boolean;
   altKey?: boolean;
   metaKey?: boolean;
+}
+
+/** Custom theme color overrides */
+export interface CustomThemeColors {
+  background?: string;
+  foreground?: string;
+  cursor?: string;
+  selectionBackground?: string;
+  black?: string;
+  red?: string;
+  green?: string;
+  yellow?: string;
+  blue?: string;
+  magenta?: string;
+  cyan?: string;
+  white?: string;
 }
 
 /** Session info exposed to UI */

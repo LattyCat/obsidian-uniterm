@@ -159,6 +159,22 @@ describe("PtyManager", () => {
       mockPtyInstance._emitData("hello world");
       expect(callback).toHaveBeenCalledWith("hello world");
     });
+
+    it("returns a disposable object", () => {
+      const proc = ptyManager.spawn(createDefaultOptions());
+      const disposable = proc.onData(vi.fn());
+      expect(disposable).toHaveProperty("dispose");
+      expect(typeof disposable.dispose).toBe("function");
+    });
+
+    it("dispose removes the callback", () => {
+      const proc = ptyManager.spawn(createDefaultOptions());
+      const callback = vi.fn();
+      const disposable = proc.onData(callback);
+      disposable.dispose();
+      mockPtyInstance._emitData("should not receive");
+      expect(callback).not.toHaveBeenCalled();
+    });
   });
 
   describe("PtyProcess.onExit()", () => {
@@ -169,6 +185,13 @@ describe("PtyManager", () => {
 
       mockPtyInstance._emitExit(1, 15);
       expect(callback).toHaveBeenCalledWith(1, 15);
+    });
+
+    it("returns a disposable object from onExit", () => {
+      const proc = ptyManager.spawn(createDefaultOptions());
+      const disposable = proc.onExit(vi.fn());
+      expect(disposable).toHaveProperty("dispose");
+      expect(typeof disposable.dispose).toBe("function");
     });
   });
 });

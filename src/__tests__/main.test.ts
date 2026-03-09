@@ -1,19 +1,78 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock terminal-view
+// Mock all dependencies
 vi.mock("../ui/terminal-view", () => ({
   TerminalView: vi.fn(),
 }));
 
-// Mock session-manager
 vi.mock("../core/session-manager", () => ({
   SessionManager: vi.fn(() => ({
     destroyAll: vi.fn(() => Promise.resolve()),
   })),
 }));
 
+vi.mock("../core/pty-manager", () => ({
+  PtyManager: vi.fn(),
+}));
+
+vi.mock("../core/electron-bridge", () => ({
+  loadNodePty: vi.fn(() => ({ pty: {}, error: null })),
+}));
+
+vi.mock("../ui/theme-manager", () => ({
+  ThemeManager: vi.fn(() => ({
+    getThemeColors: vi.fn(),
+    getObsidianTheme: vi.fn(),
+  })),
+}));
+
+vi.mock("../core/logger", () => ({
+  createLogger: vi.fn(() => ({
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    setDebugEnabled: vi.fn(),
+  })),
+}));
+
+vi.mock("../settings/settings-data", () => ({
+  loadSettings: vi.fn(() => Promise.resolve({
+    defaultShell: "",
+    defaultCwd: "",
+    maxTabs: 10,
+    autoShow: false,
+    confirmCodeblockExecution: true,
+    scrollbackBuffer: 10000,
+    fontFamily: "Menlo",
+    fontSize: 14,
+    lineHeight: 1.2,
+    cursorStyle: "block",
+    cursorBlink: true,
+    theme: "obsidian",
+    webglRenderer: true,
+    shellProfiles: [],
+    shiftEnterSequence: "\x1b\r",
+    passthroughKeybindings: [],
+    debugLog: false,
+    consentGiven: false,
+    customThemeColors: {},
+    screenReaderMode: false,
+  })),
+  saveSettings: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock("../integration/obsidian-commands", () => ({
+  registerCommands: vi.fn(),
+}));
+
 import TerminalPlugin from "../main";
 import { VIEW_TYPE_TERMINAL } from "../constants";
+import { loadNodePty } from "../core/electron-bridge";
+import { loadSettings } from "../settings/settings-data";
+import { registerCommands } from "../integration/obsidian-commands";
+import { createLogger } from "../core/logger";
+import { ThemeManager } from "../ui/theme-manager";
 
 describe("TerminalPlugin", () => {
   let plugin: TerminalPlugin;
@@ -21,6 +80,7 @@ describe("TerminalPlugin", () => {
   let mockGetLeavesOfType: ReturnType<typeof vi.fn>;
   let mockGetRightLeaf: ReturnType<typeof vi.fn>;
   let mockSetViewState: ReturnType<typeof vi.fn>;
+  let mockOn: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -31,35 +91,83 @@ describe("TerminalPlugin", () => {
     mockGetRightLeaf = vi.fn(() => ({
       setViewState: mockSetViewState,
     }));
+    mockOn = vi.fn(() => ({}));
 
     const mockApp = {
       workspace: {
         getLeavesOfType: mockGetLeavesOfType,
         getRightLeaf: mockGetRightLeaf,
         revealLeaf: mockRevealLeaf,
+        on: mockOn,
+      },
+      vault: {
+        adapter: { basePath: "/test/vault" },
       },
     };
+
+    // Mock window.getComputedStyle
+    vi.stubGlobal("window", {
+      getComputedStyle: vi.fn(() => ({})),
+    });
 
     plugin = new TerminalPlugin(mockApp as any, {} as any);
   });
 
   describe("onload()", () => {
+    it("loads settings", async () => {
+      await plugin.onload();
+      expect(loadSettings).toHaveBeenCalledWith(plugin);
+    });
+
+    it("creates logger with debug setting", async () => {
+      await plugin.onload();
+      expect(createLogger).toHaveBeenCalledWith(false);
+    });
+
+    it("loads node-pty", async () => {
+      await plugin.onload();
+      expect(loadNodePty).toHaveBeenCalled();
+    });
+
+    it("logs error when node-pty fails to load", async () => {
+      (loadNodePty as any).mockReturnValue({ pty: null, error: "Load failed" });
+      await plugin.onload();
+      const logger = (createLogger as any).mock.results[0].value;
+      expect(logger.error).toHaveBeenCalledWith("Load failed");
+    });
+
+    it("creates ThemeManager", async () => {
+      await plugin.onload();
+      expect(ThemeManager).toHaveBeenCalled();
+    });
+
     it("registers the terminal view type", async () => {
       const registerViewSpy = vi.spyOn(plugin, "registerView" as any);
-
       await plugin.onload();
-
       expect(registerViewSpy).toHaveBeenCalledWith(
         VIEW_TYPE_TERMINAL,
         expect.any(Function)
       );
     });
 
+    it("registers commands via registerCommands", async () => {
+      await plugin.onload();
+      expect(registerCommands).toHaveBeenCalledWith(
+        plugin,
+        expect.objectContaining({
+          toggleTerminal: expect.any(Function),
+          focusTerminal: expect.any(Function),
+          unfocusTerminal: expect.any(Function),
+          clearTerminal: expect.any(Function),
+          findInTerminal: expect.any(Function),
+          getActiveTerminalView: expect.any(Function),
+        })
+      );
+    });
+
     it("adds a ribbon icon", async () => {
       const addRibbonIconSpy = vi.spyOn(plugin, "addRibbonIcon" as any);
-
       await plugin.onload();
-
       expect(addRibbonIconSpy).toHaveBeenCalledWith(
         "terminal",
         "Open Terminal",
@@ -67,25 +175,16 @@ describe("TerminalPlugin", () => {
       );
     });
 
-    it("registers the toggle command", async () => {
-      const addCommandSpy = vi.spyOn(plugin, "addCommand" as any);
-
+    it("registers css-change event", async () => {
       await plugin.onload();
-
-      expect(addCommandSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: "toggle-terminal",
-          name: "Toggle Terminal Panel",
-          callback: expect.any(Function),
-        })
-      );
+      expect(mockOn).toHaveBeenCalledWith("css-change", expect.any(Function));
     });
   });
 
   describe("onunload()", () => {
     it("calls sessionManager.destroyAll()", async () => {
+      await plugin.onload();
       await plugin.onunload();
-
       expect(plugin.sessionManager.destroyAll).toHaveBeenCalled();
     });
   });
@@ -94,25 +193,30 @@ describe("TerminalPlugin", () => {
     it("activates existing leaf if one exists", async () => {
       const existingLeaf = { id: "existing-leaf" };
       mockGetLeavesOfType.mockReturnValue([existingLeaf]);
-
       await plugin.toggleTerminalPanel();
-
-      expect(mockGetLeavesOfType).toHaveBeenCalledWith(VIEW_TYPE_TERMINAL);
       expect(mockRevealLeaf).toHaveBeenCalledWith(existingLeaf);
       expect(mockGetRightLeaf).not.toHaveBeenCalled();
     });
 
     it("creates a new leaf if none exists", async () => {
       mockGetLeavesOfType.mockReturnValue([]);
-
       await plugin.toggleTerminalPanel();
-
       expect(mockGetRightLeaf).toHaveBeenCalledWith(false);
       expect(mockSetViewState).toHaveBeenCalledWith({
         type: VIEW_TYPE_TERMINAL,
         active: true,
       });
       expect(mockRevealLeaf).toHaveBeenCalled();
+    });
+  });
+
+  describe("updateSettings()", () => {
+    it("updates settings and saves", async () => {
+      const { saveSettings } = await import("../settings/settings-data");
+      await plugin.onload();
+      await plugin.updateSettings({ fontSize: 16 });
+      expect(plugin.settings.fontSize).toBe(16);
+      expect(saveSettings).toHaveBeenCalled();
     });
   });
 });

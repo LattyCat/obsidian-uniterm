@@ -57,6 +57,9 @@ describe("Type contracts", () => {
       shiftEnterSequence: "\x1b\r",
       passthroughKeybindings: [],
       debugLog: false,
+      consentGiven: false,
+      customThemeColors: {},
+      screenReaderMode: false,
     };
     expect(settings.cursorStyle).toBe("block");
     expect(settings.theme).toBe("obsidian");

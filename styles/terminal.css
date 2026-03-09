@@ -110,3 +110,45 @@ body.terminal-focused .workspace-leaf:not(.terminal-leaf) {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
+
+/* --- Error Display --- */
+
+.terminal-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  gap: 12px;
+  height: 100%;
+  color: var(--text-muted);
+}
+
+.terminal-error-message {
+  font-size: 14px;
+  text-align: center;
+  color: var(--text-error, #e45649);
+}
+
+.terminal-error-retry {
+  padding: 6px 16px;
+  font-size: 13px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.terminal-error-retry:hover {
+  opacity: 0.9;
+}
+
+/* --- Consent Dialog --- */
+
+.terminal-consent-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}

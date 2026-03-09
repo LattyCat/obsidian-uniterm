@@ -1,4 +1,4 @@
-import type { TerminalSettings, ShellProfile, PassthroughKeybinding } from "./types";
+import type { TerminalSettings, ShellProfile, PassthroughKeybinding, CustomThemeColors } from "./types";
 
 export const VIEW_TYPE_TERMINAL = "terminal-view";
 
@@ -73,4 +73,7 @@ export const DEFAULT_SETTINGS: TerminalSettings = {
   shiftEnterSequence: DEFAULT_SHIFT_ENTER_SEQUENCE,
   passthroughKeybindings: DEFAULT_PASSTHROUGH_KEYBINDINGS,
   debugLog: false,
+  consentGiven: false,
+  customThemeColors: {},
+  screenReaderMode: false,
 };

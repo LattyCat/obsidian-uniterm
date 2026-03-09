@@ -53,6 +53,13 @@ export class SessionManager {
     return Array.from(this.sessions.values()).map((s) => ({ ...s.info }));
   }
 
+  /** Get the PtyProcess for a session by ID */
+  getPtyProcess(id: string): PtyProcess | null {
+    const session = this.sessions.get(id);
+    if (!session) return null;
+    return session.ptyProcess;
+  }
+
   /** Destroy a session by ID */
   async destroy(id: string): Promise<void> {
     const session = this.sessions.get(id);

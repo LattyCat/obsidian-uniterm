@@ -35,13 +35,25 @@ export class PtyProcess {
   }
 
   /** Register a callback for data output */
-  onData(cb: DataCallback): void {
+  onData(cb: DataCallback): { dispose: () => void } {
     this.dataCallbacks.push(cb);
+    return {
+      dispose: () => {
+        const idx = this.dataCallbacks.indexOf(cb);
+        if (idx >= 0) this.dataCallbacks.splice(idx, 1);
+      },
+    };
   }
 
   /** Register a callback for process exit */
-  onExit(cb: ExitCallback): void {
+  onExit(cb: ExitCallback): { dispose: () => void } {
     this.exitCallbacks.push(cb);
+    return {
+      dispose: () => {
+        const idx = this.exitCallbacks.indexOf(cb);
+        if (idx >= 0) this.exitCallbacks.splice(idx, 1);
+      },
+    };
   }
 
   /** Resize the terminal */

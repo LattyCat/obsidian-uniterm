@@ -222,6 +222,22 @@ describe("SessionManager", () => {
     });
   });
 
+  describe("getPtyProcess()", () => {
+    it("returns the PtyProcess for a valid session ID", () => {
+      const info = sessionManager.create(
+        mockPtyManager,
+        createDefaultOptions(),
+        createDefaultProfile()
+      );
+      const ptyProcess = sessionManager.getPtyProcess(info.id);
+      expect(ptyProcess).not.toBeNull();
+    });
+
+    it("returns null for non-existent session", () => {
+      expect(sessionManager.getPtyProcess("non-existent")).toBeNull();
+    });
+  });
+
   describe("session state transitions", () => {
     it("follows correct lifecycle: Running -> ShuttingDown -> Destroyed", async () => {
       const info = sessionManager.create(

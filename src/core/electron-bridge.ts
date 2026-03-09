@@ -14,7 +14,7 @@ export const _internals = {
     if (pluginDir) {
       const sep = process.platform === "win32" ? "\\" : "/";
       const modulePath = pluginDir + sep + "node_modules" + sep + "node-pty";
-      console.log(`${LOG_PREFIX} Trying to load node-pty from: ${modulePath}`);
+      // Absolute path required in Obsidian's Electron environment
       return nodeRequire(modulePath);
     }
     // eslint-disable-next-line @typescript-eslint/no-var-requires

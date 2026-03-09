@@ -29,7 +29,6 @@ export default class TerminalPlugin extends Plugin {
     const pluginDir = manifestDir
       ? vaultBasePath + "/" + manifestDir
       : undefined;
-    this.logger.debug(`vaultBasePath=${vaultBasePath}, manifest.dir=${manifestDir}, pluginDir=${pluginDir}`);
     const { pty, error } = loadNodePty(pluginDir);
     this.ptyManager = pty ? new PtyManager(pty) : null;
     if (error) this.logger.error(error);

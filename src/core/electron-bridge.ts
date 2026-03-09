@@ -5,23 +5,35 @@ let cachedResult: ElectronBridgeResult | null = null;
 
 /** @internal Indirection object for testability */
 export const _internals = {
-  requireNodePty(): unknown {
+  requireNodePty(pluginDir?: string): unknown {
+    // Use globalThis.require to bypass esbuild's static analysis
+    const nodeRequire: NodeRequire =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (globalThis as any).require || require;
+
+    if (pluginDir) {
+      const sep = process.platform === "win32" ? "\\" : "/";
+      const modulePath = pluginDir + sep + "node_modules" + sep + "node-pty";
+      console.log(`${LOG_PREFIX} Trying to load node-pty from: ${modulePath}`);
+      return nodeRequire(modulePath);
+    }
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return require("node-pty");
+    return nodeRequire("node-pty");
   },
 };
 
 /**
  * Dynamically loads node-pty via require().
  * Caches the result so subsequent calls return the same instance.
+ * @param pluginDir - Absolute path to the plugin directory (for Obsidian environments)
  */
-export function loadNodePty(): ElectronBridgeResult {
+export function loadNodePty(pluginDir?: string): ElectronBridgeResult {
   if (cachedResult !== null) {
     return cachedResult;
   }
 
   try {
-    const pty = _internals.requireNodePty();
+    const pty = _internals.requireNodePty(pluginDir);
     cachedResult = { pty, error: null };
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e);

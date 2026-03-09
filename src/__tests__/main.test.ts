@@ -78,7 +78,7 @@ describe("TerminalPlugin", () => {
   let plugin: TerminalPlugin;
   let mockRevealLeaf: ReturnType<typeof vi.fn>;
   let mockGetLeavesOfType: ReturnType<typeof vi.fn>;
-  let mockGetRightLeaf: ReturnType<typeof vi.fn>;
+  let mockGetLeaf: ReturnType<typeof vi.fn>;
   let mockSetViewState: ReturnType<typeof vi.fn>;
   let mockOn: ReturnType<typeof vi.fn>;
 
@@ -88,7 +88,7 @@ describe("TerminalPlugin", () => {
     mockRevealLeaf = vi.fn();
     mockGetLeavesOfType = vi.fn(() => []);
     mockSetViewState = vi.fn(() => Promise.resolve());
-    mockGetRightLeaf = vi.fn(() => ({
+    mockGetLeaf = vi.fn(() => ({
       setViewState: mockSetViewState,
     }));
     mockOn = vi.fn(() => ({}));
@@ -96,7 +96,7 @@ describe("TerminalPlugin", () => {
     const mockApp = {
       workspace: {
         getLeavesOfType: mockGetLeavesOfType,
-        getRightLeaf: mockGetRightLeaf,
+        getLeaf: mockGetLeaf,
         revealLeaf: mockRevealLeaf,
         on: mockOn,
       },
@@ -195,13 +195,13 @@ describe("TerminalPlugin", () => {
       mockGetLeavesOfType.mockReturnValue([existingLeaf]);
       await plugin.toggleTerminalPanel();
       expect(mockRevealLeaf).toHaveBeenCalledWith(existingLeaf);
-      expect(mockGetRightLeaf).not.toHaveBeenCalled();
+      expect(mockGetLeaf).not.toHaveBeenCalled();
     });
 
     it("creates a new leaf if none exists", async () => {
       mockGetLeavesOfType.mockReturnValue([]);
       await plugin.toggleTerminalPanel();
-      expect(mockGetRightLeaf).toHaveBeenCalledWith(false);
+      expect(mockGetLeaf).toHaveBeenCalledWith("split", "horizontal");
       expect(mockSetViewState).toHaveBeenCalledWith({
         type: VIEW_TYPE_TERMINAL,
         active: true,

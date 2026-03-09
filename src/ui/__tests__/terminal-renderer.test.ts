@@ -103,6 +103,7 @@ describe("TerminalRenderer", () => {
         cursorBlink: true,
         scrollback: 10000,
         lineHeight: 1.2,
+        allowProposedApi: true,
       });
     });
   });

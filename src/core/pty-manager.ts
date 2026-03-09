@@ -123,14 +123,23 @@ export class PtyManager {
 
   /** Spawn a new PTY process with the given options */
   spawn(options: PtySpawnOptions): PtyProcess {
+    // Electron renderer may have a minimal PATH; ensure common paths are included
+    const defaultPath = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+    const currentPath = process.env.PATH || "";
     const env: Record<string, string> = {
       ...process.env,
       ...options.env,
       TERM: "xterm-256color",
       COLORTERM: "truecolor",
+      PATH: currentPath ? `${currentPath}:${defaultPath}` : defaultPath,
     };
 
-    const ptyInstance = this.ptyModule.spawn(options.shell, options.args, {
+    // Use absolute shell path to avoid posix_spawnp resolution failures
+    const shell = options.shell.startsWith("/")
+      ? options.shell
+      : `/bin/${options.shell}`;
+
+    const ptyInstance = this.ptyModule.spawn(shell, options.args, {
       cwd: options.cwd,
       cols: options.cols,
       rows: options.rows,

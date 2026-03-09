@@ -61,7 +61,7 @@ describe("TerminalView", () => {
 
     mockLeaf = {};
 
-    mockTerminal = { options: {} };
+    mockTerminal = { options: {}, focus: vi.fn() };
     mockRendererInstance = {
       mount: vi.fn(),
       connectPty: vi.fn(),

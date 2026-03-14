@@ -6,6 +6,9 @@ export const LOG_PREFIX = "[obsidian-terminal]";
 
 export const SHUTDOWN_TIMEOUT_MS = 3000;
 
+export const MIN_PANEL_HEIGHT = 100;
+export const MAX_PANEL_HEIGHT_RATIO = 0.8;
+
 export const DEFAULT_SHIFT_ENTER_SEQUENCE = "\x1b\r";
 
 export const DEFAULT_PASSTHROUGH_KEYBINDINGS: PassthroughKeybinding[] = [
@@ -58,7 +61,6 @@ export const PRESET_PROFILES: ShellProfile[] = [
 export const DEFAULT_SETTINGS: TerminalSettings = {
   defaultShell: "",
   defaultCwd: "",
-  maxTabs: 10,
   autoShow: false,
   scrollbackBuffer: 10000,
   fontFamily: "Menlo, Monaco, Consolas, monospace",
@@ -75,4 +77,5 @@ export const DEFAULT_SETTINGS: TerminalSettings = {
   consentGiven: false,
   customThemeColors: {},
   screenReaderMode: false,
+  panelHeight: 300,
 };

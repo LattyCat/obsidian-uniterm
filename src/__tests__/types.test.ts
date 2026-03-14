@@ -42,7 +42,6 @@ describe("Type contracts", () => {
     const settings: TerminalSettings = {
       defaultShell: "",
       defaultCwd: "",
-      maxTabs: 10,
       autoShow: false,
       scrollbackBuffer: 10000,
       fontFamily: "monospace",
@@ -59,6 +58,7 @@ describe("Type contracts", () => {
       consentGiven: false,
       customThemeColors: {},
       screenReaderMode: false,
+      panelHeight: 300,
     };
     expect(settings.cursorStyle).toBe("block");
     expect(settings.theme).toBe("obsidian");

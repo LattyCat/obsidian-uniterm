@@ -3,6 +3,8 @@ import {
   VIEW_TYPE_TERMINAL,
   LOG_PREFIX,
   SHUTDOWN_TIMEOUT_MS,
+  MIN_PANEL_HEIGHT,
+  MAX_PANEL_HEIGHT_RATIO,
   DEFAULT_SETTINGS,
   DEFAULT_SHIFT_ENTER_SEQUENCE,
   DEFAULT_PASSTHROUGH_KEYBINDINGS,
@@ -30,10 +32,6 @@ describe("SHUTDOWN_TIMEOUT_MS", () => {
 describe("DEFAULT_SETTINGS", () => {
   it("has empty defaultShell (auto-detect)", () => {
     expect(DEFAULT_SETTINGS.defaultShell).toBe("");
-  });
-
-  it("has maxTabs of 10", () => {
-    expect(DEFAULT_SETTINGS.maxTabs).toBe(10);
   });
 
   it("has scrollbackBuffer of 10000", () => {
@@ -90,6 +88,24 @@ describe("DEFAULT_SETTINGS", () => {
     expect(DEFAULT_SETTINGS.passthroughKeybindings).toEqual(
       DEFAULT_PASSTHROUGH_KEYBINDINGS
     );
+  });
+});
+
+describe("MIN_PANEL_HEIGHT", () => {
+  it("is 100", () => {
+    expect(MIN_PANEL_HEIGHT).toBe(100);
+  });
+});
+
+describe("MAX_PANEL_HEIGHT_RATIO", () => {
+  it("is 0.8", () => {
+    expect(MAX_PANEL_HEIGHT_RATIO).toBe(0.8);
+  });
+});
+
+describe("DEFAULT_SETTINGS panelHeight", () => {
+  it("has panelHeight of 300", () => {
+    expect(DEFAULT_SETTINGS.panelHeight).toBe(300);
   });
 });
 

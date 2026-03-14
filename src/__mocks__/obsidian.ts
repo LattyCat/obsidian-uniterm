@@ -23,6 +23,10 @@ export class ItemView {
     return "";
   }
 
+  addAction(_icon: string, _title: string, _callback: () => void): HTMLElement {
+    return createDiv();
+  }
+
   async onOpen(): Promise<void> {}
   async onClose(): Promise<void> {}
 }
@@ -72,6 +76,41 @@ export class Modal {
 
 export class Notice {
   constructor(_message: string, _timeout?: number) {}
+}
+
+export class SuggestModal {
+  app: any;
+  constructor(app: any) { this.app = app; }
+  open(): void {}
+  close(): void {}
+  getSuggestions(_query: string): any[] { return []; }
+  renderSuggestion(_item: any, _el: HTMLElement): void {}
+  onChooseSuggestion(_item: any, _evt: MouseEvent | KeyboardEvent): void {}
+}
+
+export class Menu {
+  items: any[] = [];
+  addItem(cb: (item: any) => any): this {
+    const item = {
+      setTitle: function(t: string) { this._title = t; return this; },
+      setIcon: function(i: string) { this._icon = i; return this; },
+      onClick: function(cb: () => void) { this._onClick = cb; return this; },
+      _title: "",
+      _icon: "",
+      _onClick: () => {},
+    };
+    cb(item);
+    this.items.push(item);
+    return this;
+  }
+  showAtMouseEvent(_e: MouseEvent): void {}
+}
+
+export class MarkdownView {
+  editor: any;
+  constructor() {
+    this.editor = { replaceSelection: () => {} };
+  }
 }
 
 export class PluginSettingTab {
@@ -212,7 +251,22 @@ function createDiv(options?: { cls?: string; text?: string }): HTMLElement {
     },
     _eventListeners: eventListeners,
     setAttribute: (_name: string, _value: string) => {},
+    getAttribute: (_name: string) => null,
     parentElement: null as any,
+    style: {} as any,
+    insertBefore: (newChild: any, refChild: any) => {
+      const idx = refChild ? children.indexOf(refChild) : children.length;
+      if (idx >= 0) {
+        children.splice(idx, 0, newChild);
+      } else {
+        children.push(newChild);
+      }
+      newChild.parentElement = el;
+      return newChild;
+    },
+    get firstChild() {
+      return children[0] || null;
+    },
   };
 
   return el;

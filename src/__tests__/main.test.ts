@@ -40,7 +40,6 @@ vi.mock("../settings/settings-data", () => ({
   loadSettings: vi.fn(() => Promise.resolve({
     defaultShell: "",
     defaultCwd: "",
-    maxTabs: 10,
     autoShow: false,
     scrollbackBuffer: 10000,
     fontFamily: "Menlo",
@@ -57,12 +56,17 @@ vi.mock("../settings/settings-data", () => ({
     consentGiven: false,
     customThemeColors: {},
     screenReaderMode: false,
+    panelHeight: 300,
   })),
   saveSettings: vi.fn(() => Promise.resolve()),
 }));
 
 vi.mock("../integration/obsidian-commands", () => ({
   registerCommands: vi.fn(),
+}));
+
+vi.mock("../integration/output-capture", () => ({
+  showCaptureModal: vi.fn(),
 }));
 
 vi.mock("../settings/settings-tab", () => ({
@@ -103,6 +107,7 @@ describe("TerminalPlugin", () => {
         getLeaf: mockGetLeaf,
         revealLeaf: mockRevealLeaf,
         on: mockOn,
+        getActiveViewOfType: vi.fn(() => null),
       },
       vault: {
         adapter: { basePath: "/test/vault" },
@@ -164,6 +169,10 @@ describe("TerminalPlugin", () => {
           unfocusTerminal: expect.any(Function),
           clearTerminal: expect.any(Function),
           findInTerminal: expect.any(Function),
+          newTab: expect.any(Function),
+          newTabWithProfile: expect.any(Function),
+          closeTab: expect.any(Function),
+          copyOutput: expect.any(Function),
           getActiveTerminalView: expect.any(Function),
         })
       );
@@ -242,6 +251,89 @@ describe("TerminalPlugin", () => {
 
       expect(mockGetLeavesOfType).toHaveBeenCalledWith(VIEW_TYPE_TERMINAL);
       expect(mockApplyTheme).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("handleActiveLeafChange()", () => {
+    it("converts empty leaf to terminal when same tab group has a terminal", async () => {
+      const sharedParent = { id: "tab-group-1" };
+      const mockTerminalLeaf = { parent: sharedParent };
+      const mockEmptyLeaf = {
+        parent: sharedParent,
+        getViewState: () => ({ type: "empty" }),
+        setViewState: vi.fn(() => Promise.resolve()),
+      };
+
+      mockGetLeavesOfType.mockReturnValue([mockTerminalLeaf]);
+
+      await plugin.onload();
+
+      // Extract the active-leaf-change callback
+      const leafChangeCall = mockOn.mock.calls.find(
+        (call: any[]) => call[0] === "active-leaf-change"
+      );
+      expect(leafChangeCall).toBeDefined();
+      const leafChangeCallback = leafChangeCall![1];
+
+      leafChangeCallback(mockEmptyLeaf);
+
+      expect(mockEmptyLeaf.setViewState).toHaveBeenCalledWith({
+        type: VIEW_TYPE_TERMINAL,
+        active: true,
+      });
+    });
+
+    it("does not convert empty leaf when no terminal in same tab group", async () => {
+      const mockEmptyLeaf = {
+        parent: { id: "tab-group-1" },
+        getViewState: () => ({ type: "empty" }),
+        setViewState: vi.fn(),
+      };
+      const mockTerminalLeaf = {
+        parent: { id: "tab-group-2" }, // different parent
+      };
+
+      mockGetLeavesOfType.mockReturnValue([mockTerminalLeaf]);
+
+      await plugin.onload();
+
+      const leafChangeCall = mockOn.mock.calls.find(
+        (call: any[]) => call[0] === "active-leaf-change"
+      );
+      leafChangeCall![1](mockEmptyLeaf);
+
+      expect(mockEmptyLeaf.setViewState).not.toHaveBeenCalled();
+    });
+
+    it("does not convert non-empty leaf", async () => {
+      const sharedParent = { id: "tab-group-1" };
+      const mockTerminalLeaf = { parent: sharedParent };
+      const mockNonEmptyLeaf = {
+        parent: sharedParent,
+        getViewState: () => ({ type: "markdown" }),
+        setViewState: vi.fn(),
+      };
+
+      mockGetLeavesOfType.mockReturnValue([mockTerminalLeaf]);
+
+      await plugin.onload();
+
+      const leafChangeCall = mockOn.mock.calls.find(
+        (call: any[]) => call[0] === "active-leaf-change"
+      );
+      leafChangeCall![1](mockNonEmptyLeaf);
+
+      expect(mockNonEmptyLeaf.setViewState).not.toHaveBeenCalled();
+    });
+
+    it("handles null leaf without error", async () => {
+      await plugin.onload();
+
+      const leafChangeCall = mockOn.mock.calls.find(
+        (call: any[]) => call[0] === "active-leaf-change"
+      );
+
+      expect(() => leafChangeCall![1](null)).not.toThrow();
     });
   });
 

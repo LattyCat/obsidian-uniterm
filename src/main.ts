@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf } from "obsidian";
+import { Plugin, WorkspaceLeaf, SuggestModal } from "obsidian";
 import { VIEW_TYPE_TERMINAL } from "./constants";
 import { TerminalView } from "./ui/terminal-view";
 import type { TerminalViewDeps } from "./ui/terminal-view";
@@ -11,7 +11,35 @@ import type { Logger } from "./core/logger";
 import { loadSettings, saveSettings } from "./settings/settings-data";
 import { registerCommands } from "./integration/obsidian-commands";
 import { TerminalSettingTab } from "./settings/settings-tab";
-import type { TerminalSettings } from "./types";
+import { showCaptureModal } from "./integration/output-capture";
+import { PRESET_PROFILES } from "./constants";
+import type { TerminalSettings, ShellProfile } from "./types";
+
+class ProfileSuggestModal extends SuggestModal<ShellProfile> {
+  private profiles: ShellProfile[];
+  private onSelect: (profile: ShellProfile) => void;
+
+  constructor(app: any, profiles: ShellProfile[], onSelect: (profile: ShellProfile) => void) {
+    super(app);
+    this.profiles = profiles;
+    this.onSelect = onSelect;
+  }
+
+  getSuggestions(query: string): ShellProfile[] {
+    const lower = query.toLowerCase();
+    return this.profiles.filter((p) =>
+      p.name.toLowerCase().includes(lower),
+    );
+  }
+
+  renderSuggestion(profile: ShellProfile, el: HTMLElement): void {
+    el.createEl("div", { text: profile.name });
+  }
+
+  onChooseSuggestion(profile: ShellProfile): void {
+    this.onSelect(profile);
+  }
+}
 
 export default class TerminalPlugin extends Plugin {
   settings!: TerminalSettings;
@@ -48,6 +76,24 @@ export default class TerminalPlugin extends Plugin {
       unfocusTerminal: () => this.getActiveTerminalView()?.unfocusTerminal(),
       clearTerminal: () => this.getActiveTerminalView()?.clearTerminal(),
       findInTerminal: () => this.getActiveTerminalView()?.toggleSearch(),
+      newTab: () => this.createNewTerminalTab(),
+      newTabWithProfile: () => this.showProfileSelector(),
+      closeTab: () => {
+        const view = this.getActiveTerminalView();
+        if (view) {
+          view.leaf.detach();
+        }
+      },
+      copyOutput: () => {
+        const view = this.getActiveTerminalView();
+        if (view) {
+          showCaptureModal({
+            app: this.app,
+            getSelectedText: () => view.getSelectedText(),
+            getBufferText: () => view.getBufferText(),
+          });
+        }
+      },
       getActiveTerminalView: () => this.getActiveTerminalView(),
     });
 
@@ -56,6 +102,12 @@ export default class TerminalPlugin extends Plugin {
     });
 
     this.addSettingTab(new TerminalSettingTab(this.app, this));
+
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", (leaf: WorkspaceLeaf | null) => {
+        this.handleActiveLeafChange(leaf);
+      })
+    );
 
     this.registerEvent(
       this.app.workspace.on("css-change", () => this.onThemeChange())
@@ -84,6 +136,26 @@ export default class TerminalPlugin extends Plugin {
     }
   }
 
+  /** Create a new terminal as an Obsidian native tab */
+  async createNewTerminalTab(profile?: ShellProfile): Promise<void> {
+    const leaf = this.app.workspace.getLeaf("tab");
+    if (leaf) {
+      await leaf.setViewState({
+        type: VIEW_TYPE_TERMINAL,
+        active: true,
+        state: profile ? { profile } : {},
+      });
+      this.app.workspace.revealLeaf(leaf);
+    }
+  }
+
+  private showProfileSelector(): void {
+    const allProfiles = [...PRESET_PROFILES, ...this.settings.shellProfiles];
+    new ProfileSuggestModal(this.app, allProfiles, (profile) => {
+      this.createNewTerminalTab(profile);
+    }).open();
+  }
+
   private createViewDeps(): TerminalViewDeps {
     return {
       settings: { ...this.settings },
@@ -99,13 +171,43 @@ export default class TerminalPlugin extends Plugin {
       getLatestSettings: () => ({ ...this.settings }),
       vaultPath: (this.app.vault as any).adapter?.basePath || "",
       platform: process.platform,
+      onSaveSettings: (updates: Partial<TerminalSettings>) => {
+        this.updateSettings(updates);
+      },
+      onNewTerminalTab: () => {
+        this.createNewTerminalTab();
+      },
     };
   }
 
   private getActiveTerminalView(): TerminalView | null {
+    // Return the currently active terminal view (works with multiple leaves)
+    const activeView = this.app.workspace.getActiveViewOfType(TerminalView);
+    if (activeView) return activeView;
+
+    // Fallback: return the first terminal leaf if none is active
     const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
     if (leaves.length === 0) return null;
     return leaves[0].view as TerminalView;
+  }
+
+  private handleActiveLeafChange(leaf: WorkspaceLeaf | null): void {
+    if (!leaf) return;
+
+    const viewState = (leaf as any).getViewState();
+    if (viewState.type !== "empty") return;
+
+    const terminalLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
+    const sameGroup = terminalLeaves.some(
+      (termLeaf: WorkspaceLeaf) => (termLeaf as any).parent === (leaf as any).parent
+    );
+
+    if (sameGroup) {
+      (leaf as any).setViewState({
+        type: VIEW_TYPE_TERMINAL,
+        active: true,
+      });
+    }
   }
 
   private onThemeChange(): void {

@@ -30,7 +30,6 @@ describe("settings-data", () => {
       expect(result.fontSize).toBe(18);
       expect(result.cursorBlink).toBe(false);
       expect(result.defaultShell).toBe(DEFAULT_SETTINGS.defaultShell);
-      expect(result.maxTabs).toBe(DEFAULT_SETTINGS.maxTabs);
     });
 
     it("preserves new fields when old data lacks them (consentGiven)", async () => {

@@ -4,6 +4,10 @@ export interface CommandCallbacks {
   unfocusTerminal: () => void;
   clearTerminal: () => void;
   findInTerminal: () => void;
+  newTab: () => void;
+  newTabWithProfile: () => void;
+  closeTab: () => void;
+  copyOutput: () => void;
   getActiveTerminalView: () => any | null;
 }
 
@@ -64,6 +68,40 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
       const view = callbacks.getActiveTerminalView();
       if (!view) return false;
       if (!checking) callbacks.findInTerminal();
+      return true;
+    },
+  });
+
+  plugin.addCommand({
+    id: "new-tab",
+    name: "New Terminal Tab",
+    callback: () => callbacks.newTab(),
+  });
+
+  plugin.addCommand({
+    id: "new-tab-profile",
+    name: "New Tab with Profile",
+    callback: () => callbacks.newTabWithProfile(),
+  });
+
+  plugin.addCommand({
+    id: "close-tab",
+    name: "Close Terminal Tab",
+    checkCallback: (checking: boolean) => {
+      const view = callbacks.getActiveTerminalView();
+      if (!view) return false;
+      if (!checking) callbacks.closeTab();
+      return true;
+    },
+  });
+
+  plugin.addCommand({
+    id: "copy-output",
+    name: "Copy Terminal Output",
+    checkCallback: (checking: boolean) => {
+      const view = callbacks.getActiveTerminalView();
+      if (!view) return false;
+      if (!checking) callbacks.copyOutput();
       return true;
     },
   });

@@ -148,3 +148,22 @@
   margin-top: 16px;
   justify-content: flex-end;
 }
+
+/* --- Drag & Drop Feedback --- */
+
+.terminal-drag-over {
+  outline: 2px dashed var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.terminal-drag-over::after {
+  content: "Drop file to insert path";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--text-muted);
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 10;
+}

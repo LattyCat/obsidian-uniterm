@@ -13,13 +13,17 @@ describe("registerCommands", () => {
       unfocusTerminal: vi.fn(),
       clearTerminal: vi.fn(),
       findInTerminal: vi.fn(),
+      newTab: vi.fn(),
+      newTabWithProfile: vi.fn(),
+      closeTab: vi.fn(),
+      copyOutput: vi.fn(),
       getActiveTerminalView: vi.fn(() => null),
     };
   });
 
-  it("registers 5 commands", () => {
+  it("registers 9 commands", () => {
     registerCommands(mockPlugin, callbacks);
-    expect(mockPlugin.addCommand).toHaveBeenCalledTimes(5);
+    expect(mockPlugin.addCommand).toHaveBeenCalledTimes(9);
   });
 
   it("registers toggle-terminal command", () => {
@@ -105,5 +109,51 @@ describe("registerCommands", () => {
     );
     cmd![0].checkCallback(true);
     expect(callbacks.clearTerminal).not.toHaveBeenCalled();
+  });
+
+  // New tab commands
+
+  it("new-tab uses callback (always available)", () => {
+    registerCommands(mockPlugin, callbacks);
+    const cmd = mockPlugin.addCommand.mock.calls.find(
+      (c: any) => c[0].id === "new-tab"
+    );
+    expect(cmd).toBeDefined();
+    expect(cmd![0].callback).toBeDefined();
+    cmd![0].callback();
+    expect(callbacks.newTab).toHaveBeenCalled();
+  });
+
+  it("new-tab-profile uses callback (always available)", () => {
+    registerCommands(mockPlugin, callbacks);
+    const cmd = mockPlugin.addCommand.mock.calls.find(
+      (c: any) => c[0].id === "new-tab-profile"
+    );
+    expect(cmd).toBeDefined();
+    expect(cmd![0].callback).toBeDefined();
+    cmd![0].callback();
+    expect(callbacks.newTabWithProfile).toHaveBeenCalled();
+  });
+
+  it("close-tab executes closeTab when not checking", () => {
+    (callbacks.getActiveTerminalView as any).mockReturnValue({});
+    registerCommands(mockPlugin, callbacks);
+    const cmd = mockPlugin.addCommand.mock.calls.find(
+      (c: any) => c[0].id === "close-tab"
+    );
+    expect(cmd).toBeDefined();
+    cmd![0].checkCallback(false);
+    expect(callbacks.closeTab).toHaveBeenCalled();
+  });
+
+  it("copy-output executes copyOutput when not checking", () => {
+    (callbacks.getActiveTerminalView as any).mockReturnValue({});
+    registerCommands(mockPlugin, callbacks);
+    const cmd = mockPlugin.addCommand.mock.calls.find(
+      (c: any) => c[0].id === "copy-output"
+    );
+    expect(cmd).toBeDefined();
+    cmd![0].checkCallback(false);
+    expect(callbacks.copyOutput).toHaveBeenCalled();
   });
 });

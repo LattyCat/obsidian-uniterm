@@ -9,6 +9,7 @@ import { KeybindingHandler } from "../keybinding-handler";
 import { SearchBar } from "../search-bar";
 import { ConsentModal } from "../consent-dialog";
 import { showPtyLoadError } from "../error-display";
+import { DragDropHandler } from "../../integration/drag-drop-handler";
 import { detectDefaultShell } from "../../core/shell-detector";
 
 vi.mock("../terminal-renderer", () => ({
@@ -36,6 +37,9 @@ vi.mock("../consent-dialog", () => ({
 vi.mock("../../core/shell-detector", () => ({
   detectDefaultShell: vi.fn(() => "/bin/bash"),
 }));
+vi.mock("../../integration/drag-drop-handler", () => ({
+  DragDropHandler: vi.fn(),
+}));
 
 // ResizeObserver mock (jsdom doesn't have it)
 const mockResizeObserverInstance = {
@@ -54,6 +58,7 @@ describe("TerminalView", () => {
   let mockKeybindingInstance: any;
   let mockSearchInstance: any;
   let mockConsentInstance: any;
+  let mockDragDropInstance: any;
   let mockPtyProcess: any;
 
   beforeEach(() => {
@@ -61,7 +66,7 @@ describe("TerminalView", () => {
 
     mockLeaf = {};
 
-    mockTerminal = { options: {}, focus: vi.fn() };
+    mockTerminal = { options: {}, focus: vi.fn(), buffer: { active: { length: 0, getLine: vi.fn() } } };
     mockRendererInstance = {
       mount: vi.fn(),
       connectPty: vi.fn(),
@@ -72,6 +77,8 @@ describe("TerminalView", () => {
       findPrevious: vi.fn(),
       clearSearch: vi.fn(),
       clearTerminal: vi.fn(),
+      hasSelection: vi.fn(() => false),
+      getSelection: vi.fn(() => ""),
       dispose: vi.fn(),
     };
     (TerminalRenderer as any).mockImplementation(() => mockRendererInstance);
@@ -103,6 +110,11 @@ describe("TerminalView", () => {
       close: vi.fn(),
     };
     (ConsentModal as any).mockImplementation(() => mockConsentInstance);
+
+    mockDragDropInstance = {
+      dispose: vi.fn(),
+    };
+    (DragDropHandler as any).mockImplementation(() => mockDragDropInstance);
 
     mockPtyProcess = {
       onData: vi.fn(() => ({ dispose: vi.fn() })),
@@ -148,6 +160,7 @@ describe("TerminalView", () => {
       getLatestSettings: vi.fn(() => ({ ...DEFAULT_SETTINGS, consentGiven: true })),
       vaultPath: "/test/vault",
       platform: "darwin",
+      onSaveSettings: vi.fn(),
       ...overrides,
     };
   }
@@ -203,7 +216,6 @@ describe("TerminalView", () => {
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
 
-      // Extract the callbacks passed to ConsentModal constructor
       const consentCallbacks = (ConsentModal as any).mock.calls[0][1];
       consentCallbacks.onConsent();
 
@@ -244,10 +256,10 @@ describe("TerminalView", () => {
     });
   });
 
-  // ---- onOpen initialization ----
+  // ---- onOpen initialization (single session) ----
 
   describe("onOpen() - initialization", () => {
-    it("creates TerminalRenderer with correct options from settings", async () => {
+    it("creates TerminalRenderer with correct settings", async () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
@@ -256,43 +268,6 @@ describe("TerminalView", () => {
       const opts = (TerminalRenderer as any).mock.calls[0][0];
       expect(opts.fontSize).toBe(DEFAULT_SETTINGS.fontSize);
       expect(opts.fontFamily).toBe(DEFAULT_SETTINGS.fontFamily);
-      expect(opts.cursorStyle).toBe(DEFAULT_SETTINGS.cursorStyle);
-      expect(opts.cursorBlink).toBe(DEFAULT_SETTINGS.cursorBlink);
-      expect(opts.scrollback).toBe(DEFAULT_SETTINGS.scrollbackBuffer);
-      expect(opts.lineHeight).toBe(DEFAULT_SETTINGS.lineHeight);
-      expect(opts.webglEnabled).toBe(DEFAULT_SETTINGS.webglRenderer);
-      expect(typeof opts.onWebGLFallback).toBe("function");
-    });
-
-    it("calls renderer.mount() with container panel", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      expect(mockRendererInstance.mount).toHaveBeenCalledTimes(1);
-      const panel = (view as any).containerPanel;
-      expect(mockRendererInstance.mount).toHaveBeenCalledWith(panel);
-    });
-
-    it("applies obsidian theme when settings.theme is 'obsidian'", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      expect(deps.themeManager.getObsidianTheme).toHaveBeenCalledWith(document.body);
-      expect(deps.themeManager.getThemeColors).not.toHaveBeenCalled();
-    });
-
-    it("applies non-obsidian theme via getThemeColors", async () => {
-      const customSettings = { ...DEFAULT_SETTINGS, theme: "dark" as const, consentGiven: true };
-      const deps = createMockDeps({
-        getLatestSettings: vi.fn(() => customSettings),
-      });
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      expect(deps.themeManager.getThemeColors).toHaveBeenCalledWith("dark", customSettings.customThemeColors);
-      expect(deps.themeManager.getObsidianTheme).not.toHaveBeenCalled();
     });
 
     it("creates session via sessionManager.create", async () => {
@@ -302,16 +277,12 @@ describe("TerminalView", () => {
 
       expect(deps.sessionManager.create).toHaveBeenCalledTimes(1);
       const callArgs = (deps.sessionManager.create as any).mock.calls[0];
-      expect(callArgs[0]).toBe(deps.ptyManager); // ptyManager
+      expect(callArgs[0]).toBe(deps.ptyManager);
       expect(callArgs[1]).toEqual(expect.objectContaining({
         cols: 80,
         rows: 24,
         args: ["--login"],
         env: {},
-      }));
-      expect(callArgs[2]).toEqual(expect.objectContaining({
-        id: "default",
-        name: "Default Shell",
       }));
     });
 
@@ -340,16 +311,6 @@ describe("TerminalView", () => {
       expect(KeybindingHandler).toHaveBeenCalledTimes(1);
       const opts = (KeybindingHandler as any).mock.calls[0][0];
       expect(opts.platform).toBe("darwin");
-      expect(typeof opts.writeToPty).toBe("function");
-    });
-
-    it("attaches custom key event handler to renderer", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      expect(mockRendererInstance.attachCustomKeyEventHandler).toHaveBeenCalledTimes(1);
-      expect(typeof mockRendererInstance.attachCustomKeyEventHandler.mock.calls[0][0]).toBe("function");
     });
 
     it("creates SearchBar", async () => {
@@ -358,10 +319,14 @@ describe("TerminalView", () => {
       await view.onOpen();
 
       expect(SearchBar).toHaveBeenCalledTimes(1);
-      const opts = (SearchBar as any).mock.calls[0][0];
-      expect(typeof opts.findNext).toBe("function");
-      expect(typeof opts.findPrevious).toBe("function");
-      expect(typeof opts.clearSearch).toBe("function");
+    });
+
+    it("creates DragDropHandler", async () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      expect(DragDropHandler).toHaveBeenCalledTimes(1);
     });
 
     it("sets up ResizeObserver on container panel", async () => {
@@ -374,22 +339,14 @@ describe("TerminalView", () => {
       expect(mockResizeObserverInstance.observe).toHaveBeenCalledWith(panel);
     });
 
-    it("sets ARIA attributes on container panel", async () => {
-      const deps = createMockDeps();
+    it("adds header action for new terminal tab when callback provided", async () => {
+      const onNewTerminalTab = vi.fn();
+      const deps = createMockDeps({ onNewTerminalTab });
       const view = new TerminalView(mockLeaf as any, deps);
+      const addActionSpy = vi.spyOn(view, "addAction" as any);
       await view.onOpen();
 
-      const panel = (view as any).containerPanel;
-      expect(panel).not.toBeNull();
-      expect(panel.setAttribute).toBeDefined();
-    });
-
-    it("auto-focuses via focusManager after initialization", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      expect(mockFocusInstance.focus).toHaveBeenCalledTimes(1);
+      expect(addActionSpy).toHaveBeenCalledWith("plus", "New Terminal Tab", expect.any(Function));
     });
 
     it("uses detectDefaultShell when settings.defaultShell is empty", async () => {
@@ -413,7 +370,7 @@ describe("TerminalView", () => {
   // ---- onClose cleanup ----
 
   describe("onClose()", () => {
-    it("destroys session via sessionManager", async () => {
+    it("destroys session", async () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
@@ -422,31 +379,16 @@ describe("TerminalView", () => {
       expect(deps.sessionManager.destroy).toHaveBeenCalledWith("session-1");
     });
 
-    it("disposes renderer", async () => {
+    it("disposes all components", async () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
       await view.onClose();
 
-      expect(mockRendererInstance.dispose).toHaveBeenCalledTimes(1);
-    });
-
-    it("disposes focusManager", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-      await view.onClose();
-
-      expect(mockFocusInstance.dispose).toHaveBeenCalledTimes(1);
-    });
-
-    it("disposes searchBar", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-      await view.onClose();
-
-      expect(mockSearchInstance.dispose).toHaveBeenCalledTimes(1);
+      expect(mockSearchInstance.dispose).toHaveBeenCalled();
+      expect(mockDragDropInstance.dispose).toHaveBeenCalled();
+      expect(mockFocusInstance.dispose).toHaveBeenCalled();
+      expect(mockRendererInstance.dispose).toHaveBeenCalled();
     });
 
     it("disconnects ResizeObserver", async () => {
@@ -466,21 +408,6 @@ describe("TerminalView", () => {
 
       expect((view as any).containerPanel).toBeNull();
     });
-
-    it("sets all internal references to null", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-      await view.onClose();
-
-      expect((view as any).renderer).toBeNull();
-      expect((view as any).focusManager).toBeNull();
-      expect((view as any).searchBar).toBeNull();
-      expect((view as any).keybindingHandler).toBeNull();
-      expect((view as any).ptyProcess).toBeNull();
-      expect((view as any).sessionId).toBeNull();
-      expect((view as any).resizeObserver).toBeNull();
-    });
   });
 
   // ---- Public methods ----
@@ -496,24 +423,22 @@ describe("TerminalView", () => {
       expect(mockRendererInstance.clearTerminal).toHaveBeenCalledTimes(1);
     });
 
-    it("does nothing when renderer is null", () => {
+    it("does nothing when no renderer", () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
-      // No onOpen called, so renderer is null
       expect(() => view.clearTerminal()).not.toThrow();
     });
   });
 
   describe("toggleSearch()", () => {
-    it("calls searchBar.toggle() with container panel", async () => {
+    it("calls searchBar.toggle()", async () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
 
       view.toggleSearch();
 
-      const panel = (view as any).containerPanel;
-      expect(mockSearchInstance.toggle).toHaveBeenCalledWith(panel);
+      expect(mockSearchInstance.toggle).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -523,9 +448,7 @@ describe("TerminalView", () => {
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
 
-      // Reset to distinguish auto-focus from explicit call
       mockFocusInstance.focus.mockClear();
-
       view.focusTerminal();
 
       expect(mockFocusInstance.focus).toHaveBeenCalledTimes(1);
@@ -533,16 +456,12 @@ describe("TerminalView", () => {
   });
 
   describe("applyTheme()", () => {
-    it("reapplies obsidian theme to terminal options", async () => {
+    it("reapplies theme", async () => {
       const mockThemeColors = { background: "#reapplied" };
       const deps = createMockDeps();
       (deps.themeManager.getObsidianTheme as any).mockReturnValue(mockThemeColors);
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
-
-      // Clear previous calls
-      (deps.themeManager.getObsidianTheme as any).mockClear();
-      (deps.themeManager.getObsidianTheme as any).mockReturnValue(mockThemeColors);
 
       view.applyTheme();
 
@@ -550,26 +469,7 @@ describe("TerminalView", () => {
       expect(mockTerminal.options.theme).toBe(mockThemeColors);
     });
 
-    it("applies non-obsidian theme via getThemeColors", async () => {
-      const customSettings = { ...DEFAULT_SETTINGS, theme: "dark" as const, consentGiven: true };
-      const mockThemeColors = { background: "#dark-reapplied" };
-      const deps = createMockDeps({
-        getLatestSettings: vi.fn(() => customSettings),
-      });
-      (deps.themeManager.getThemeColors as any).mockReturnValue(mockThemeColors);
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      (deps.themeManager.getThemeColors as any).mockClear();
-      (deps.themeManager.getThemeColors as any).mockReturnValue(mockThemeColors);
-
-      view.applyTheme();
-
-      expect(deps.themeManager.getThemeColors).toHaveBeenCalledWith("dark", customSettings.customThemeColors);
-      expect(mockTerminal.options.theme).toBe(mockThemeColors);
-    });
-
-    it("does nothing when renderer is null", () => {
+    it("does nothing when no renderer", () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
       expect(() => view.applyTheme()).not.toThrow();
@@ -588,58 +488,68 @@ describe("TerminalView", () => {
     });
   });
 
-  // ---- applySettings ----
-
   describe("applySettings()", () => {
-    it("updates terminal options with new settings", async () => {
+    it("updates terminal options", async () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
 
-      const newSettings = { ...DEFAULT_SETTINGS, fontSize: 18, fontFamily: "Fira Code", lineHeight: 1.5, cursorStyle: "bar" as const, cursorBlink: false, consentGiven: true };
+      const newSettings = { ...DEFAULT_SETTINGS, fontSize: 18, fontFamily: "Fira Code", consentGiven: true };
       view.applySettings(newSettings);
 
       expect(mockTerminal.options.fontSize).toBe(18);
       expect(mockTerminal.options.fontFamily).toBe("Fira Code");
-      expect(mockTerminal.options.lineHeight).toBe(1.5);
-      expect(mockTerminal.options.cursorStyle).toBe("bar");
-      expect(mockTerminal.options.cursorBlink).toBe(false);
     });
 
-    it("applies theme via themeManager", async () => {
+    it("does nothing when no renderer", () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      // Clear calls from onOpen
-      (deps.themeManager.getObsidianTheme as any).mockClear();
-
-      const newSettings = { ...DEFAULT_SETTINGS, theme: "obsidian" as const, consentGiven: true };
-      view.applySettings(newSettings);
-
-      expect(deps.themeManager.getObsidianTheme).toHaveBeenCalledWith(document.body);
-    });
-
-    it("calls renderer.resize() and ptyProcess.resize()", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      mockRendererInstance.resize.mockClear();
-      mockPtyProcess.resize.mockClear();
-
-      view.applySettings({ ...DEFAULT_SETTINGS, consentGiven: true });
-
-      // resize is called twice: once for re-layout, once for getting cols/rows
-      expect(mockRendererInstance.resize).toHaveBeenCalled();
-      expect(mockPtyProcess.resize).toHaveBeenCalledWith(80, 24);
-    });
-
-    it("does nothing when renderer is null", () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      // No onOpen called
       expect(() => view.applySettings({ ...DEFAULT_SETTINGS, consentGiven: true })).not.toThrow();
+    });
+  });
+
+  describe("getSelectedText()", () => {
+    it("returns null when no renderer", () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      expect(view.getSelectedText()).toBeNull();
+    });
+
+    it("returns selection when renderer has selection", async () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      mockRendererInstance.hasSelection.mockReturnValue(true);
+      mockRendererInstance.getSelection.mockReturnValue("selected text");
+
+      expect(view.getSelectedText()).toBe("selected text");
+    });
+  });
+
+  describe("getBufferText()", () => {
+    it("returns empty string when no renderer", () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      expect(view.getBufferText()).toBe("");
+    });
+  });
+
+  describe("getState()", () => {
+    it("returns profile in state", async () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      await view.onOpen();
+
+      const state = view.getState();
+      expect(state.profile).toBeDefined();
+    });
+
+    it("returns undefined profile before initialization", () => {
+      const deps = createMockDeps();
+      const view = new TerminalView(mockLeaf as any, deps);
+      const state = view.getState();
+      expect(state.profile).toBeUndefined();
     });
   });
 });

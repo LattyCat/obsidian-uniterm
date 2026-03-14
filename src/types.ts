@@ -21,7 +21,6 @@ export interface ShellProfile {
 export interface TerminalSettings {
   defaultShell: string;
   defaultCwd: string;
-  maxTabs: number;
   autoShow: boolean;
   scrollbackBuffer: number;
   fontFamily: string;
@@ -38,6 +37,7 @@ export interface TerminalSettings {
   consentGiven: boolean;
   customThemeColors: CustomThemeColors;
   screenReaderMode: boolean;
+  panelHeight: number;
 }
 
 /** Electron bridge result for loading native modules */

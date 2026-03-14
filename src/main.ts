@@ -11,7 +11,6 @@ import type { Logger } from "./core/logger";
 import { loadSettings, saveSettings } from "./settings/settings-data";
 import { registerCommands } from "./integration/obsidian-commands";
 import { TerminalSettingTab } from "./settings/settings-tab";
-import { showCaptureModal } from "./integration/output-capture";
 import { PRESET_PROFILES } from "./constants";
 import type { TerminalSettings, ShellProfile } from "./types";
 
@@ -82,16 +81,6 @@ export default class TerminalPlugin extends Plugin {
         const view = this.getActiveTerminalView();
         if (view) {
           view.leaf.detach();
-        }
-      },
-      copyOutput: () => {
-        const view = this.getActiveTerminalView();
-        if (view) {
-          showCaptureModal({
-            app: this.app,
-            getSelectedText: () => view.getSelectedText(),
-            getBufferText: () => view.getBufferText(),
-          });
         }
       },
       getActiveTerminalView: () => this.getActiveTerminalView(),

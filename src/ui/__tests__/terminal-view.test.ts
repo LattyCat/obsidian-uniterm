@@ -508,33 +508,6 @@ describe("TerminalView", () => {
     });
   });
 
-  describe("getSelectedText()", () => {
-    it("returns null when no renderer", () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      expect(view.getSelectedText()).toBeNull();
-    });
-
-    it("returns selection when renderer has selection", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      mockRendererInstance.hasSelection.mockReturnValue(true);
-      mockRendererInstance.getSelection.mockReturnValue("selected text");
-
-      expect(view.getSelectedText()).toBe("selected text");
-    });
-  });
-
-  describe("getBufferText()", () => {
-    it("returns empty string when no renderer", () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      expect(view.getBufferText()).toBe("");
-    });
-  });
-
   describe("getState()", () => {
     it("returns profile in state", async () => {
       const deps = createMockDeps();

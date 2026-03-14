@@ -318,25 +318,6 @@ export class TerminalView extends ItemView {
     this.focusManager?.unfocus();
   }
 
-  /** Get selected text */
-  getSelectedText(): string | null {
-    if (!this.renderer) return null;
-    return this.renderer.hasSelection() ? this.renderer.getSelection() : null;
-  }
-
-  /** Get full buffer text */
-  getBufferText(): string {
-    if (!this.renderer) return "";
-    const terminal = this.renderer.getTerminal();
-    const buffer = terminal.buffer.active;
-    const lines: string[] = [];
-    for (let i = 0; i < buffer.length; i++) {
-      const line = buffer.getLine(i);
-      if (line) lines.push(line.translateToString(true));
-    }
-    return lines.join("\n");
-  }
-
   /** Apply updated settings */
   applySettings(settings: TerminalSettings): void {
     if (!this.renderer) return;

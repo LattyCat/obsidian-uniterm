@@ -21,7 +21,7 @@ Obsidian内にVSCode風の統合ターミナルを提供するコミュニティ
 |------|---------------------|------------------------|
 | AIエージェント対応 | 後付け対応・Shift+Enter問題等 | 設計段階からTUI/AIエージェントを第一級サポート |
 | セットアップ | Python依存・手動ビルド必要な場合あり | node-ptyプリビルドバイナリで依存最小化 |
-| Obsidian連携 | 限定的（主にファイルパス挿入程度） | 出力キャプチャ・D&D連携 |
+| Obsidian連携 | 限定的（主にファイルパス挿入程度） | D&D連携 |
 | UI/UX | テーマ設定がJSON直編集 | GUIベースのテーマ・フォント設定 |
 
 ### 1.3 対応プラットフォーム
@@ -127,7 +127,6 @@ obsidian-terminal/
 │   │   └── drag-drop.ts         # D&Dハンドラ
 │   ├── integration/
 │   │   ├── obsidian-commands.ts  # コマンドパレット登録
-│   │   ├── output-capture.ts     # 出力→ノートコピー
 │   │   └── ribbon-actions.ts     # リボンアイコン
 │   └── settings/
 │       ├── settings-tab.ts       # 設定画面
@@ -345,7 +344,6 @@ Claude Code、Codex CLI、Gemini CLI等のAIコーディングエージェント
 | `terminal:unfocus` | ターミナルからフォーカス解除 | エディタにフォーカスを戻す |
 | `terminal:clear` | ターミナルをクリア | 画面クリア |
 | `terminal:find` | ターミナル内検索 | 検索バー表示 |
-| `terminal:copy-output` | 出力をノートに保存 | 選択範囲/全出力をノートへ |
 
 #### 3.4.2 リボンアイコン
 
@@ -353,31 +351,7 @@ Claude Code、Codex CLI、Gemini CLI等のAIコーディングエージェント
 - クリックでターミナルパネルのトグル
 - 右クリックでプロファイル選択メニュー
 
-#### 3.4.3 ターミナル出力 → Obsidianノートへのコピー
-
-**操作フロー:**
-
-1. ターミナル上でテキストを選択（またはコマンドで全出力を対象）
-2. コマンドパレット or 右クリックメニューで「出力をノートに保存」
-3. 保存先の選択:
-   - **現在のノートに挿入** — カーソル位置にコードブロックとして挿入
-   - **新規ノートとして作成** — 設定で指定したフォルダに新規ノート
-   - **クリップボードにコピー** — プレーンテキストとしてコピー
-
-**挿入フォーマット例:**
-
-````markdown
-```bash
-$ git status
-On branch main
-Your branch is up to date with 'origin/main'.
-
-Changes not staged for commit:
-  modified:   src/main.ts
-```
-````
-
-#### 3.4.4 ドラッグ＆ドロップ連携
+#### 3.4.3 ドラッグ＆ドロップ連携
 
 - Obsidianのファイルエクスプローラからターミナルへファイル/フォルダをドラッグ
 - ドロップ時にファイルの絶対パスをシェルに応じたエスケープ処理付きで挿入
@@ -824,7 +798,6 @@ private processWriteBuffer() {
 | FocusManager | フォーカス切替・キーイベント伝搬 | P0 |
 | ThemeManager | Obsidianテーマ同期 | P1 |
 | ProfileManager | プロファイルCRUD | P1 |
-| OutputCapture | 出力テキストの正しい抽出 | P2 |
 
 ### 9.2 結合テスト
 
@@ -917,7 +890,6 @@ private processWriteBuffer() {
 
 - [ ] 複数タブUI実装（タブの作成・閉じる・切替・リネーム）
 - [ ] ドラッグ＆ドロップ連携（シェル別エスケープ処理）
-- [ ] ターミナル出力 → ノートコピー機能
 - [ ] パネル高さドラッグリサイズ
 - [ ] コマンドパレット全コマンド実装
 

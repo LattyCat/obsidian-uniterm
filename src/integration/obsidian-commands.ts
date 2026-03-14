@@ -7,7 +7,6 @@ export interface CommandCallbacks {
   newTab: () => void;
   newTabWithProfile: () => void;
   closeTab: () => void;
-  copyOutput: () => void;
   getActiveTerminalView: () => any | null;
 }
 
@@ -95,14 +94,4 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
     },
   });
 
-  plugin.addCommand({
-    id: "copy-output",
-    name: "Copy Terminal Output",
-    checkCallback: (checking: boolean) => {
-      const view = callbacks.getActiveTerminalView();
-      if (!view) return false;
-      if (!checking) callbacks.copyOutput();
-      return true;
-    },
-  });
 }

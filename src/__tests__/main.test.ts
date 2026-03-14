@@ -65,10 +65,6 @@ vi.mock("../integration/obsidian-commands", () => ({
   registerCommands: vi.fn(),
 }));
 
-vi.mock("../integration/output-capture", () => ({
-  showCaptureModal: vi.fn(),
-}));
-
 vi.mock("../settings/settings-tab", () => ({
   TerminalSettingTab: vi.fn(),
 }));
@@ -172,7 +168,6 @@ describe("TerminalPlugin", () => {
           newTab: expect.any(Function),
           newTabWithProfile: expect.any(Function),
           closeTab: expect.any(Function),
-          copyOutput: expect.any(Function),
           getActiveTerminalView: expect.any(Function),
         })
       );

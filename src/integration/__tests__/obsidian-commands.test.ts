@@ -16,14 +16,13 @@ describe("registerCommands", () => {
       newTab: vi.fn(),
       newTabWithProfile: vi.fn(),
       closeTab: vi.fn(),
-      copyOutput: vi.fn(),
       getActiveTerminalView: vi.fn(() => null),
     };
   });
 
-  it("registers 9 commands", () => {
+  it("registers 8 commands", () => {
     registerCommands(mockPlugin, callbacks);
-    expect(mockPlugin.addCommand).toHaveBeenCalledTimes(9);
+    expect(mockPlugin.addCommand).toHaveBeenCalledTimes(8);
   });
 
   it("registers toggle-terminal command", () => {
@@ -146,14 +145,4 @@ describe("registerCommands", () => {
     expect(callbacks.closeTab).toHaveBeenCalled();
   });
 
-  it("copy-output executes copyOutput when not checking", () => {
-    (callbacks.getActiveTerminalView as any).mockReturnValue({});
-    registerCommands(mockPlugin, callbacks);
-    const cmd = mockPlugin.addCommand.mock.calls.find(
-      (c: any) => c[0].id === "copy-output"
-    );
-    expect(cmd).toBeDefined();
-    cmd![0].checkCallback(false);
-    expect(callbacks.copyOutput).toHaveBeenCalled();
-  });
 });

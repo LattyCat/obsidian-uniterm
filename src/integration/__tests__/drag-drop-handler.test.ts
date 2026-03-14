@@ -6,6 +6,7 @@ import {
   escapeCmdPath,
   escapePathForShell,
   resolveVaultPath,
+  extractPathFromObsidianUri,
   DragDropHandler,
   ShellType,
   DragDropHandlerOptions,
@@ -83,6 +84,32 @@ describe("resolveVaultPath", () => {
   });
 });
 
+describe("extractPathFromObsidianUri", () => {
+  it("extracts file path from obsidian:// URI", () => {
+    expect(
+      extractPathFromObsidianUri("obsidian://open?vault=obsidian&file=2026-03-11T07-46-22")
+    ).toBe("2026-03-11T07-46-22");
+  });
+
+  it("handles URL-encoded characters", () => {
+    expect(
+      extractPathFromObsidianUri("obsidian://open?vault=test&file=notes%2Fmy%20file")
+    ).toBe("notes/my file");
+  });
+
+  it("returns null for non-obsidian URIs", () => {
+    expect(extractPathFromObsidianUri("https://example.com")).toBeNull();
+  });
+
+  it("returns null for plain file paths", () => {
+    expect(extractPathFromObsidianUri("notes/file.md")).toBeNull();
+  });
+
+  it("returns null when file parameter is missing", () => {
+    expect(extractPathFromObsidianUri("obsidian://open?vault=test")).toBeNull();
+  });
+});
+
 describe("DragDropHandler", () => {
   let container: HTMLDivElement;
   let writeToPty: ReturnType<typeof vi.fn>;
@@ -138,6 +165,48 @@ describe("DragDropHandler", () => {
     expect(dataTransfer.getData).toHaveBeenCalledWith("text/plain");
     expect(writeToPty).toHaveBeenCalledWith(
       "'/home/user/vault/notes/my file.md' "
+    );
+  });
+
+  it("handles obsidian:// URI drop by extracting file path and adding .md", () => {
+    const dataTransfer = {
+      getData: vi.fn(() => "obsidian://open?vault=obsidian&file=2026-03-11T07-46-22"),
+    };
+    const event = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+
+    container.dispatchEvent(event);
+
+    expect(writeToPty).toHaveBeenCalledWith(
+      "'/home/user/vault/2026-03-11T07-46-22.md' "
+    );
+  });
+
+  it("handles obsidian:// URI with subdirectory path", () => {
+    const dataTransfer = {
+      getData: vi.fn(() => "obsidian://open?vault=obsidian&file=notes%2Fmy%20note"),
+    };
+    const event = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+
+    container.dispatchEvent(event);
+
+    expect(writeToPty).toHaveBeenCalledWith(
+      "'/home/user/vault/notes/my note.md' "
+    );
+  });
+
+  it("handles obsidian:// URI with existing extension (no .md added)", () => {
+    const dataTransfer = {
+      getData: vi.fn(() => "obsidian://open?vault=obsidian&file=assets%2Fimage.png"),
+    };
+    const event = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+
+    container.dispatchEvent(event);
+
+    expect(writeToPty).toHaveBeenCalledWith(
+      "'/home/user/vault/assets/image.png' "
     );
   });
 

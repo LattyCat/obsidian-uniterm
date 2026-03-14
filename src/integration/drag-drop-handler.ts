@@ -24,6 +24,18 @@ export function escapeCmdPath(path: string): string {
   return `"${path}"`;
 }
 
+/** Extract vault-relative file path from an obsidian:// URI, or return null */
+export function extractPathFromObsidianUri(uri: string): string | null {
+  if (!uri.startsWith("obsidian://")) return null;
+  try {
+    const url = new URL(uri);
+    const file = url.searchParams.get("file");
+    return file || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Escape a path based on shell type */
 export function escapePathForShell(path: string, shellType: ShellType): string {
   switch (shellType) {
@@ -72,10 +84,19 @@ export class DragDropHandler {
       this.container.classList.remove("terminal-drag-over");
 
       const dragEvent = e as DragEvent;
-      const path = dragEvent.dataTransfer?.getData("text/plain");
-      if (!path) return;
+      const rawData = dragEvent.dataTransfer?.getData("text/plain");
+      if (!rawData) return;
 
-      const absolutePath = resolveVaultPath(path, this.vaultPath);
+      let relativePath: string;
+      const obsidianPath = extractPathFromObsidianUri(rawData);
+      if (obsidianPath !== null) {
+        // Add .md extension if the path has no extension
+        relativePath = obsidianPath.includes(".") ? obsidianPath : obsidianPath + ".md";
+      } else {
+        relativePath = rawData;
+      }
+
+      const absolutePath = resolveVaultPath(relativePath, this.vaultPath);
       const escaped = escapePathForShell(absolutePath, this.getShellType());
       this.writeToPty(escaped + " ");
     };

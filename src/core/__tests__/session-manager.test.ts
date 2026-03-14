@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SessionManager } from "../session-manager";
 import { SessionState } from "../../types";
-import type { ShellProfile, PtySpawnOptions } from "../../types";
+import type { PtySpawnOptions } from "../../types";
 import type { PtyManager, PtyProcess } from "../pty-manager";
 
 function createMockPtyProcess(): PtyProcess & {
@@ -33,20 +33,6 @@ function createMockPtyManager(
   } as any;
 }
 
-function createDefaultProfile(
-  overrides: Partial<ShellProfile> = {}
-): ShellProfile {
-  return {
-    id: "bash",
-    name: "Bash",
-    shellPath: "/bin/bash",
-    shellArgs: ["--login"],
-    cwd: "/home/user",
-    icon: "terminal",
-    ...overrides,
-  };
-}
-
 function createDefaultOptions(
   overrides: Partial<PtySpawnOptions> = {}
 ): PtySpawnOptions {
@@ -76,8 +62,7 @@ describe("SessionManager", () => {
     it("creates a session with SessionState.Running", () => {
       const info = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       expect(info.state).toBe(SessionState.Running);
@@ -86,13 +71,11 @@ describe("SessionManager", () => {
     it("assigns unique session IDs", () => {
       const info1 = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
       const info2 = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       expect(info1.id).not.toBe(info2.id);
@@ -103,15 +86,13 @@ describe("SessionManager", () => {
     it("returns the session by ID", () => {
       const created = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       const retrieved = sessionManager.getSession(created.id);
       expect(retrieved).not.toBeNull();
       expect(retrieved!.id).toBe(created.id);
       expect(retrieved!.state).toBe(SessionState.Running);
-      expect(retrieved!.profile.name).toBe("Bash");
     });
 
     it("returns null for non-existent session", () => {
@@ -123,13 +104,11 @@ describe("SessionManager", () => {
     it("returns all sessions", () => {
       sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
       sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile({ id: "zsh", name: "Zsh" })
+        createDefaultOptions()
       );
 
       const sessions = sessionManager.getSessions();
@@ -141,8 +120,7 @@ describe("SessionManager", () => {
     it("transitions state: Running -> ShuttingDown -> Destroyed", async () => {
       const info = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       // Capture state during destroy by checking inside the mock
@@ -165,8 +143,7 @@ describe("SessionManager", () => {
     it("calls ptyProcess.destroy()", async () => {
       const info = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       await sessionManager.destroy(info.id);
@@ -188,13 +165,11 @@ describe("SessionManager", () => {
 
       sessionManager.create(
         manager1,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
       sessionManager.create(
         manager2,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       await sessionManager.destroyAll();
@@ -210,8 +185,7 @@ describe("SessionManager", () => {
     it("updates session state to Destroyed when PTY exits", () => {
       const info = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       // Simulate the PTY process exiting
@@ -226,8 +200,7 @@ describe("SessionManager", () => {
     it("returns the PtyProcess for a valid session ID", () => {
       const info = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
       const ptyProcess = sessionManager.getPtyProcess(info.id);
       expect(ptyProcess).not.toBeNull();
@@ -242,8 +215,7 @@ describe("SessionManager", () => {
     it("follows correct lifecycle: Running -> ShuttingDown -> Destroyed", async () => {
       const info = sessionManager.create(
         mockPtyManager,
-        createDefaultOptions(),
-        createDefaultProfile()
+        createDefaultOptions()
       );
 
       expect(sessionManager.getSession(info.id)!.state).toBe(

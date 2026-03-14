@@ -1,4 +1,4 @@
-import type { PtySpawnOptions, ShellProfile, SessionInfo } from "../types";
+import type { PtySpawnOptions, SessionInfo } from "../types";
 import { SessionState } from "../types";
 import { PtyManager, PtyProcess } from "./pty-manager";
 
@@ -16,7 +16,6 @@ export class SessionManager {
   create(
     ptyManager: PtyManager,
     options: PtySpawnOptions,
-    profile: ShellProfile
   ): SessionInfo {
     const id = this.generateId();
     const ptyProcess = ptyManager.spawn(options);
@@ -24,7 +23,6 @@ export class SessionManager {
     const info: SessionInfo = {
       id,
       state: SessionState.Running,
-      profile,
     };
 
     const session: Session = { info, ptyProcess };

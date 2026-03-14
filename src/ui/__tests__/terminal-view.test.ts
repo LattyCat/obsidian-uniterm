@@ -144,7 +144,7 @@ describe("TerminalView", () => {
     return {
       settings: { ...DEFAULT_SETTINGS, consentGiven: true },
       sessionManager: {
-        create: vi.fn(() => ({ id: "session-1", state: "running", profile: {} })),
+        create: vi.fn(() => ({ id: "session-1", state: "running" })),
         destroy: vi.fn().mockResolvedValue(undefined),
         getPtyProcess: vi.fn(() => mockPtyProcess),
         getSession: vi.fn(),
@@ -519,20 +519,13 @@ describe("TerminalView", () => {
   });
 
   describe("getState()", () => {
-    it("returns profile in state", async () => {
+    it("returns empty state", async () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
       await view.onOpen();
 
       const state = view.getState();
-      expect(state.profile).toBeDefined();
-    });
-
-    it("returns undefined profile before initialization", () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      const state = view.getState();
-      expect(state.profile).toBeUndefined();
+      expect(state).toEqual({});
     });
   });
 });

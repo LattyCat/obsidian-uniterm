@@ -1,4 +1,4 @@
-import { Plugin, WorkspaceLeaf, SuggestModal } from "obsidian";
+import { Plugin, WorkspaceLeaf } from "obsidian";
 import { VIEW_TYPE_TERMINAL } from "./constants";
 import { TerminalView } from "./ui/terminal-view";
 import type { TerminalViewDeps } from "./ui/terminal-view";
@@ -11,34 +11,7 @@ import type { Logger } from "./core/logger";
 import { loadSettings, saveSettings } from "./settings/settings-data";
 import { registerCommands } from "./integration/obsidian-commands";
 import { TerminalSettingTab } from "./settings/settings-tab";
-import { PRESET_PROFILES } from "./constants";
-import type { TerminalSettings, ShellProfile } from "./types";
-
-class ProfileSuggestModal extends SuggestModal<ShellProfile> {
-  private profiles: ShellProfile[];
-  private onSelect: (profile: ShellProfile) => void;
-
-  constructor(app: any, profiles: ShellProfile[], onSelect: (profile: ShellProfile) => void) {
-    super(app);
-    this.profiles = profiles;
-    this.onSelect = onSelect;
-  }
-
-  getSuggestions(query: string): ShellProfile[] {
-    const lower = query.toLowerCase();
-    return this.profiles.filter((p) =>
-      p.name.toLowerCase().includes(lower),
-    );
-  }
-
-  renderSuggestion(profile: ShellProfile, el: HTMLElement): void {
-    el.createEl("div", { text: profile.name });
-  }
-
-  onChooseSuggestion(profile: ShellProfile): void {
-    this.onSelect(profile);
-  }
-}
+import type { TerminalSettings } from "./types";
 
 export default class TerminalPlugin extends Plugin {
   settings!: TerminalSettings;
@@ -76,7 +49,6 @@ export default class TerminalPlugin extends Plugin {
       clearTerminal: () => this.getActiveTerminalView()?.clearTerminal(),
       findInTerminal: () => this.getActiveTerminalView()?.toggleSearch(),
       newTab: () => this.createNewTerminalTab(),
-      newTabWithProfile: () => this.showProfileSelector(),
       closeTab: () => {
         const view = this.getActiveTerminalView();
         if (view) {
@@ -126,23 +98,15 @@ export default class TerminalPlugin extends Plugin {
   }
 
   /** Create a new terminal as an Obsidian native tab */
-  async createNewTerminalTab(profile?: ShellProfile): Promise<void> {
+  async createNewTerminalTab(): Promise<void> {
     const leaf = this.app.workspace.getLeaf("tab");
     if (leaf) {
       await leaf.setViewState({
         type: VIEW_TYPE_TERMINAL,
         active: true,
-        state: profile ? { profile } : {},
       });
       this.app.workspace.revealLeaf(leaf);
     }
-  }
-
-  private showProfileSelector(): void {
-    const allProfiles = [...PRESET_PROFILES, ...this.settings.shellProfiles];
-    new ProfileSuggestModal(this.app, allProfiles, (profile) => {
-      this.createNewTerminalTab(profile);
-    }).open();
   }
 
   private createViewDeps(): TerminalViewDeps {

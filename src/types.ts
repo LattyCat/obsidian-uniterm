@@ -7,16 +7,6 @@ export enum SessionState {
   Destroyed = "destroyed",
 }
 
-/** Shell profile configuration */
-export interface ShellProfile {
-  id: string;
-  name: string;
-  shellPath: string;
-  shellArgs: string[];
-  cwd: string;
-  icon: string;
-}
-
 /** Terminal appearance settings */
 export interface TerminalSettings {
   defaultShell: string;
@@ -30,7 +20,6 @@ export interface TerminalSettings {
   cursorBlink: boolean;
   theme: "obsidian" | "dark" | "light" | "custom";
   webglRenderer: boolean;
-  shellProfiles: ShellProfile[];
   shiftEnterSequence: string;
   passthroughKeybindings: PassthroughKeybinding[];
   debugLog: boolean;
@@ -85,5 +74,4 @@ export interface CustomThemeColors {
 export interface SessionInfo {
   id: string;
   state: SessionState;
-  profile: ShellProfile;
 }

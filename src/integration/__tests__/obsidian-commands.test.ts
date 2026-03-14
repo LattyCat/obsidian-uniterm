@@ -14,15 +14,14 @@ describe("registerCommands", () => {
       clearTerminal: vi.fn(),
       findInTerminal: vi.fn(),
       newTab: vi.fn(),
-      newTabWithProfile: vi.fn(),
       closeTab: vi.fn(),
       getActiveTerminalView: vi.fn(() => null),
     };
   });
 
-  it("registers 8 commands", () => {
+  it("registers 7 commands", () => {
     registerCommands(mockPlugin, callbacks);
-    expect(mockPlugin.addCommand).toHaveBeenCalledTimes(8);
+    expect(mockPlugin.addCommand).toHaveBeenCalledTimes(7);
   });
 
   it("registers toggle-terminal command", () => {
@@ -121,17 +120,6 @@ describe("registerCommands", () => {
     expect(cmd![0].callback).toBeDefined();
     cmd![0].callback();
     expect(callbacks.newTab).toHaveBeenCalled();
-  });
-
-  it("new-tab-profile uses callback (always available)", () => {
-    registerCommands(mockPlugin, callbacks);
-    const cmd = mockPlugin.addCommand.mock.calls.find(
-      (c: any) => c[0].id === "new-tab-profile"
-    );
-    expect(cmd).toBeDefined();
-    expect(cmd![0].callback).toBeDefined();
-    cmd![0].callback();
-    expect(callbacks.newTabWithProfile).toHaveBeenCalled();
   });
 
   it("close-tab executes closeTab when not checking", () => {

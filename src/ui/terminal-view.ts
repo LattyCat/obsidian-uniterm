@@ -11,7 +11,7 @@ import { DragDropHandler } from "../integration/drag-drop-handler";
 import { ResizeHandle } from "./resize-handle";
 import { MIN_PANEL_HEIGHT, MAX_PANEL_HEIGHT_RATIO } from "../constants";
 import { detectDefaultShell } from "../core/shell-detector";
-import type { TerminalSettings, ShellProfile } from "../types";
+import type { TerminalSettings } from "../types";
 import type { SessionManager } from "../core/session-manager";
 import type { PtyManager, PtyProcess } from "../core/pty-manager";
 import type { Logger } from "../core/logger";
@@ -46,10 +46,6 @@ export class TerminalView extends ItemView {
   private dragDropHandler: DragDropHandler | null = null;
   private resizeHandle: ResizeHandle | null = null;
   private sessionId: string | null = null;
-  private profile: ShellProfile | null = null;
-
-  // Profile to use on open (set via setState for leaf persistence)
-  private pendingProfile: ShellProfile | undefined;
 
   constructor(leaf: WorkspaceLeaf, deps: TerminalViewDeps) {
     super(leaf);
@@ -126,32 +122,19 @@ export class TerminalView extends ItemView {
     }
 
     // Create the single terminal session
-    this.createSession(this.pendingProfile);
+    this.createSession();
   }
 
   /** Create and mount the single terminal session */
-  private createSession(profile?: ShellProfile): void {
+  private createSession(): void {
     const settings = this.deps.getLatestSettings();
 
     if (!this.deps.ptyManager || !this.containerPanel) return;
 
     // Detect shell
-    const shell =
-      profile?.shellPath || settings.defaultShell || detectDefaultShell(this.deps.platform);
-    const cwd = profile?.cwd || settings.defaultCwd || this.deps.vaultPath;
-    const shellArgs = profile?.shellArgs?.length ? profile.shellArgs : ["--login"];
-    const resolvedProfile: ShellProfile = profile
-      ? { ...profile, shellPath: shell, cwd }
-      : {
-          id: "default",
-          name: "Default Shell",
-          shellPath: shell,
-          shellArgs,
-          cwd,
-          icon: "terminal",
-        };
-
-    this.profile = resolvedProfile;
+    const shell = settings.defaultShell || detectDefaultShell(this.deps.platform);
+    const cwd = settings.defaultCwd || this.deps.vaultPath;
+    const shellArgs = ["--login"];
 
     // Create renderer
     const renderer = new TerminalRenderer({
@@ -184,7 +167,6 @@ export class TerminalView extends ItemView {
     const sessionInfo = this.deps.sessionManager.create(
       this.deps.ptyManager,
       { shell, args: shellArgs, cwd, cols, rows, env: {} },
-      resolvedProfile,
     );
 
     // Connect PTY
@@ -372,16 +354,12 @@ export class TerminalView extends ItemView {
 
   /** Obsidian leaf state persistence — save */
   getState(): Record<string, unknown> {
-    return {
-      profile: this.profile ?? undefined,
-    };
+    return {};
   }
 
   /** Obsidian leaf state persistence — restore */
-  async setState(state: Record<string, unknown>, _result: any): Promise<void> {
-    if (state.profile) {
-      this.pendingProfile = state.profile as ShellProfile;
-    }
+  async setState(_state: Record<string, unknown>, _result: any): Promise<void> {
+    // No state to restore
   }
 
   private resizeTerminal(): void {

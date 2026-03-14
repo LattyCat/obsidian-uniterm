@@ -5,7 +5,6 @@ export interface CommandCallbacks {
   clearTerminal: () => void;
   findInTerminal: () => void;
   newTab: () => void;
-  newTabWithProfile: () => void;
   closeTab: () => void;
   getActiveTerminalView: () => any | null;
 }
@@ -75,12 +74,6 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
     id: "new-tab",
     name: "New Terminal Tab",
     callback: () => callbacks.newTab(),
-  });
-
-  plugin.addCommand({
-    id: "new-tab-profile",
-    name: "New Tab with Profile",
-    callback: () => callbacks.newTabWithProfile(),
   });
 
   plugin.addCommand({

@@ -8,7 +8,6 @@ import {
   DEFAULT_SETTINGS,
   DEFAULT_SHIFT_ENTER_SEQUENCE,
   DEFAULT_PASSTHROUGH_KEYBINDINGS,
-  PRESET_PROFILES,
 } from "../constants";
 
 describe("VIEW_TYPE_TERMINAL", () => {
@@ -52,10 +51,6 @@ describe("DEFAULT_SETTINGS", () => {
 
   it("has webglRenderer enabled", () => {
     expect(DEFAULT_SETTINGS.webglRenderer).toBe(true);
-  });
-
-  it("has empty shellProfiles", () => {
-    expect(DEFAULT_SETTINGS.shellProfiles).toEqual([]);
   });
 
   it("has autoShow disabled", () => {
@@ -124,23 +119,3 @@ describe("DEFAULT_PASSTHROUGH_KEYBINDINGS", () => {
   });
 });
 
-describe("PRESET_PROFILES", () => {
-  it("has 5 preset profiles", () => {
-    expect(PRESET_PROFILES).toHaveLength(5);
-  });
-
-  it("includes default, claude-code, codex-cli, gemini-cli, git", () => {
-    const ids = PRESET_PROFILES.map((p) => p.id);
-    expect(ids).toContain("default");
-    expect(ids).toContain("claude-code");
-    expect(ids).toContain("codex-cli");
-    expect(ids).toContain("gemini-cli");
-    expect(ids).toContain("git");
-  });
-
-  it("all presets have empty shellPath for auto-detect", () => {
-    for (const profile of PRESET_PROFILES) {
-      expect(profile.shellPath).toBe("");
-    }
-  });
-});

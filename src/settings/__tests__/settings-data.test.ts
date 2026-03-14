@@ -67,15 +67,12 @@ describe("settings-data", () => {
         defaultShell: "/bin/zsh",
         fontSize: 20,
         cursorBlink: true,
-        shellProfiles: [{ id: "test", name: "Test", shellPath: "/bin/sh", shellArgs: [], cwd: "", icon: "terminal" }],
         customThemeColors: { foreground: "#fff", cursor: "#0f0" },
       });
       const result = await loadSettings(plugin);
       expect(result.defaultShell).toBe("/bin/zsh");
       expect(result.fontSize).toBe(20);
       expect(result.cursorBlink).toBe(true);
-      expect(result.shellProfiles).toHaveLength(1);
-      expect(result.shellProfiles[0].id).toBe("test");
       expect(result.customThemeColors.foreground).toBe("#fff");
       expect(result.customThemeColors.cursor).toBe("#0f0");
     });

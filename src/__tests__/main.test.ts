@@ -49,7 +49,6 @@ vi.mock("../settings/settings-data", () => ({
     cursorBlink: true,
     theme: "obsidian",
     webglRenderer: true,
-    shellProfiles: [],
     shiftEnterSequence: "\x1b\r",
     passthroughKeybindings: [],
     debugLog: false,
@@ -166,7 +165,6 @@ describe("TerminalPlugin", () => {
           clearTerminal: expect.any(Function),
           findInTerminal: expect.any(Function),
           newTab: expect.any(Function),
-          newTabWithProfile: expect.any(Function),
           closeTab: expect.any(Function),
           getActiveTerminalView: expect.any(Function),
         })

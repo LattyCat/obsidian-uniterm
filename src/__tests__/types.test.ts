@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { SessionState } from "../types";
 import type {
-  ShellProfile,
   TerminalSettings,
   ElectronBridgeResult,
   PtySpawnOptions,
@@ -25,19 +24,6 @@ describe("SessionState enum", () => {
 });
 
 describe("Type contracts", () => {
-  it("ShellProfile has required fields", () => {
-    const profile: ShellProfile = {
-      id: "test",
-      name: "Test Shell",
-      shellPath: "/bin/bash",
-      shellArgs: ["-l"],
-      cwd: "/tmp",
-      icon: "terminal",
-    };
-    expect(profile.id).toBe("test");
-    expect(profile.shellArgs).toEqual(["-l"]);
-  });
-
   it("TerminalSettings has all default-able fields", () => {
     const settings: TerminalSettings = {
       defaultShell: "",
@@ -51,7 +37,6 @@ describe("Type contracts", () => {
       cursorBlink: true,
       theme: "obsidian",
       webglRenderer: true,
-      shellProfiles: [],
       shiftEnterSequence: "\x1b\r",
       passthroughKeybindings: [],
       debugLog: false,
@@ -106,18 +91,10 @@ describe("Type contracts", () => {
     expect(opts.env.TERM).toBe("xterm-256color");
   });
 
-  it("SessionInfo exposes state and profile", () => {
+  it("SessionInfo exposes state", () => {
     const info: SessionInfo = {
       id: "sess-1",
       state: SessionState.Running,
-      profile: {
-        id: "default",
-        name: "Default",
-        shellPath: "/bin/bash",
-        shellArgs: [],
-        cwd: "",
-        icon: "terminal",
-      },
     };
     expect(info.state).toBe(SessionState.Running);
   });

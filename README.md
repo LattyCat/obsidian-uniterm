@@ -8,9 +8,12 @@ OSネイティブシェルを直接実行し、AIコーディングエージェ�
 
 - **ネイティブシェル統合** — node-pty + xterm.jsによる完全なターミナルエミュレーション
 - **AIエージェント最適化** — Shift+Enter、TUIレンダリング、大量出力のフロー制御を設計段階からサポート
+- **タブ管理** — 複数ターミナルをタブとして開き、並行作業が可能
 - **WebGLレンダラー** — GPU加速レンダリング（Canvas自動フォールバック付き）
 - **テーマ同期** — Obsidianのダーク/ライトテーマに自動追従、カスタムテーマも対応
-- **シェルプロファイル** — Default Shell / Claude Code / Codex CLI / Gemini CLI / Git のプリセット
+- **ドラッグ&ドロップ** — ファイルをターミナルにD&Dでシェル対応のエスケープ済みパスを挿入
+- **パネルリサイズ** — ドラッグでターミナルパネルの高さを調整、設定を保持
+- **フロー制御** — バックプレッシャー制御による大量出力時のデータ損失防止
 - **フォーカス管理** — Ctrl+Escape でフォーカス解除、Cmd/Ctrl キーはObsidianに転送
 - **ターミナル内検索** — Ctrl+Shift+F / Cmd+Shift+F
 - **設定GUI** — フォント、カーソル、テーマ、スクロールバック等をObsidian設定画面から変更
@@ -51,24 +54,12 @@ OSネイティブシェルを直接実行し、AIコーディングエージェ�
 ### コマンドパレット
 
 - `UniTerm: Toggle terminal panel` — パネルの表示/非表示
+- `UniTerm: New tab` — 新しいターミナルタブを作成
+- `UniTerm: Close tab` — 現在のターミナルタブを閉じる
 - `UniTerm: Focus terminal` — ターミナルにフォーカス移動
 - `UniTerm: Unfocus terminal` — フォーカス解除
 - `UniTerm: Clear terminal` — 画面クリア
 - `UniTerm: Find in terminal` — 検索バー表示
-
-## Status
-
-**v1.0.0-beta** — Phase 1〜3 実装完了。実機検証中。
-
-仕様書は [`spec/SPEC.md`](spec/SPEC.md) を参照。
-
-### Roadmap
-
-| バージョン | スコープ | 状態 |
-|-----------|---------|------|
-| **v1.0** | 単一ターミナル + AIエージェント対応 + 設定UI | beta |
-| v1.1 | タブ管理、D&D、出力コピー | planned |
-| v1.2+ | セッション復元、分割ペイン、SSH接続 | planned |
 
 ## Requirements
 
@@ -97,14 +88,16 @@ src/
 │   ├── focus-manager.ts          # Focus state management
 │   ├── keybinding-handler.ts     # Key event routing
 │   ├── search-bar.ts             # In-terminal search UI
+│   ├── resize-handle.ts          # Panel height drag-resize
+│   ├── flow-controller.ts        # Backpressure buffering
 │   ├── consent-dialog.ts         # First-run security consent
 │   └── error-display.ts          # Error UI with retry
 ├── settings/
 │   ├── settings-tab.ts           # Obsidian PluginSettingTab
-│   ├── settings-data.ts          # Load/save persistence
-│   └── profile-manager.ts        # Shell profile CRUD
+│   └── settings-data.ts          # Load/save persistence
 └── integration/
-    └── obsidian-commands.ts       # Command palette registration
+    ├── obsidian-commands.ts       # Command palette registration
+    └── drag-drop-handler.ts       # Drag-drop file path insertion
 ```
 
 ## Tech Stack
@@ -112,7 +105,7 @@ src/
 - [xterm.js](https://xtermjs.org/) v5.x — ターミナルエミュレータ
 - [node-pty](https://github.com/microsoft/node-pty) — PTYプロセス管理
 - TypeScript (strict) + esbuild
-- vitest — テストフレームワーク (300+ tests)
+- vitest — テストフレームワーク (323 tests)
 
 ## Development
 

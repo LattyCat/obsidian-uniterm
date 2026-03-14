@@ -5,6 +5,8 @@ export interface DragDropHandlerOptions {
   vaultPath: string;
   getShellType: () => ShellType;
   writeToPty: (data: string) => void;
+  /** Resolve drag path from Obsidian's internal drag manager */
+  getInternalDragPath?: () => string | null;
 }
 
 /** Escape a file path for a POSIX shell (bash/zsh/fish) */
@@ -59,6 +61,7 @@ export class DragDropHandler {
   private vaultPath: string;
   private getShellType: () => ShellType;
   private writeToPty: (data: string) => void;
+  private getInternalDragPath: () => string | null;
 
   private handleDragOver: (e: Event) => void;
   private handleDragLeave: (e: Event) => void;
@@ -69,6 +72,7 @@ export class DragDropHandler {
     this.vaultPath = options.vaultPath;
     this.getShellType = options.getShellType;
     this.writeToPty = options.writeToPty;
+    this.getInternalDragPath = options.getInternalDragPath || (() => null);
 
     this.handleDragOver = (e: Event) => {
       e.preventDefault();
@@ -84,13 +88,23 @@ export class DragDropHandler {
       this.container.classList.remove("terminal-drag-over");
 
       const dragEvent = e as DragEvent;
+
+      // 1. Try Obsidian's internal drag manager (has full vault-relative path)
+      const internalPath = this.getInternalDragPath();
+      if (internalPath) {
+        const absolutePath = resolveVaultPath(internalPath, this.vaultPath);
+        const escaped = escapePathForShell(absolutePath, this.getShellType());
+        this.writeToPty(escaped + " ");
+        return;
+      }
+
+      // 2. Fall back to text/plain from DataTransfer
       const rawData = dragEvent.dataTransfer?.getData("text/plain");
       if (!rawData) return;
 
       let relativePath: string;
       const obsidianPath = extractPathFromObsidianUri(rawData);
       if (obsidianPath !== null) {
-        // Add .md extension if the path has no extension
         relativePath = obsidianPath.includes(".") ? obsidianPath : obsidianPath + ".md";
       } else {
         relativePath = rawData;

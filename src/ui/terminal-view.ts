@@ -224,6 +224,10 @@ export class TerminalView extends ItemView {
       vaultPath: this.deps.vaultPath,
       getShellType: () => this.detectShellType(shell),
       writeToPty: (data: string) => ptyProcess?.write(data),
+      getInternalDragPath: () => {
+        const draggable = (this.app as any).dragManager?.draggable;
+        return draggable?.file?.path ?? draggable?.path ?? null;
+      },
     });
 
     // Click-to-focus

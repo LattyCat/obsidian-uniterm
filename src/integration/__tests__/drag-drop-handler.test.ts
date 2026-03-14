@@ -151,6 +151,52 @@ describe("DragDropHandler", () => {
     expect(container.classList.contains("terminal-drag-over")).toBe(false);
   });
 
+  it("uses getInternalDragPath when available (Obsidian drag manager)", () => {
+    handler.dispose();
+    const internalHandler = new DragDropHandler({
+      container,
+      vaultPath: "/home/user/vault",
+      getShellType: () => "posix",
+      writeToPty,
+      getInternalDragPath: () => "01_Diary/2026",
+    });
+
+    const dataTransfer = { getData: vi.fn(() => "2026") };
+    const event = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+
+    container.dispatchEvent(event);
+
+    expect(writeToPty).toHaveBeenCalledWith(
+      "'/home/user/vault/01_Diary/2026' "
+    );
+    // text/plain should NOT be read when internal path is available
+    expect(dataTransfer.getData).not.toHaveBeenCalled();
+    internalHandler.dispose();
+  });
+
+  it("falls back to text/plain when getInternalDragPath returns null", () => {
+    handler.dispose();
+    const internalHandler = new DragDropHandler({
+      container,
+      vaultPath: "/home/user/vault",
+      getShellType: () => "posix",
+      writeToPty,
+      getInternalDragPath: () => null,
+    });
+
+    const dataTransfer = { getData: vi.fn(() => "notes/my file.md") };
+    const event = new Event("drop", { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", { value: dataTransfer });
+
+    container.dispatchEvent(event);
+
+    expect(writeToPty).toHaveBeenCalledWith(
+      "'/home/user/vault/notes/my file.md' "
+    );
+    internalHandler.dispose();
+  });
+
   it("handles drop: resolves path, escapes for shell, writes to PTY with trailing space", () => {
     const dataTransfer = {
       getData: vi.fn(() => "notes/my file.md"),

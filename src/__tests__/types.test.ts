@@ -64,7 +64,7 @@ describe("Type contracts", () => {
   });
 
   it("ElectronBridgeResult can represent success", () => {
-    const result: ElectronBridgeResult = { pty: {}, error: null };
+    const result: ElectronBridgeResult = { pty: { spawn: () => ({} as any) }, error: null };
     expect(result.pty).not.toBeNull();
     expect(result.error).toBeNull();
   });

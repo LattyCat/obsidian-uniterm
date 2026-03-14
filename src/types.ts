@@ -31,7 +31,7 @@ export interface TerminalSettings {
 
 /** Electron bridge result for loading native modules */
 export interface ElectronBridgeResult {
-  pty: unknown | null;
+  pty: IPtyModule | null;
   error: string | null;
 }
 
@@ -68,6 +68,24 @@ export interface CustomThemeColors {
   magenta?: string;
   cyan?: string;
   white?: string;
+}
+
+/** Interface for a single node-pty process instance */
+export interface IPtyInstance {
+  onData(cb: (data: string) => void): { dispose: () => void } | void;
+  onExit(cb: (info: { exitCode: number; signal?: number }) => void): { dispose: () => void } | void;
+  write(data: string): void;
+  resize(cols: number, rows: number): void;
+  kill(signal?: string): void;
+}
+
+/** Interface for the node-pty module */
+export interface IPtyModule {
+  spawn(
+    shell: string,
+    args: string[],
+    options: { cwd: string; cols: number; rows: number; env: Record<string, string> },
+  ): IPtyInstance;
 }
 
 /** Session info exposed to UI */

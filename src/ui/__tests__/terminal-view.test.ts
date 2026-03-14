@@ -518,14 +518,4 @@ describe("TerminalView", () => {
     });
   });
 
-  describe("getState()", () => {
-    it("returns empty state", async () => {
-      const deps = createMockDeps();
-      const view = new TerminalView(mockLeaf as any, deps);
-      await view.onOpen();
-
-      const state = view.getState();
-      expect(state).toEqual({});
-    });
-  });
 });

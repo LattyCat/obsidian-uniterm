@@ -91,10 +91,7 @@ export class ResizeHandle {
   }
 
   private applyHeight(leaf: HTMLElement, height: number): void {
-    leaf.style.height = `${height}px`;
-    leaf.style.flexBasis = `${height}px`;
-    leaf.style.flexGrow = "0";
-    leaf.style.flexShrink = "0";
+    ResizeHandle.applyHeightToLeaf(leaf, height);
   }
 
   /** Apply saved height to a leaf element (for initial restoration) */

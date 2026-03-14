@@ -1,4 +1,4 @@
-import { Modal } from "obsidian";
+import { App, Modal } from "obsidian";
 
 export interface ConsentDialogCallbacks {
   onConsent: () => void;
@@ -8,7 +8,7 @@ export interface ConsentDialogCallbacks {
 export class ConsentModal extends Modal {
   private callbacks: ConsentDialogCallbacks;
 
-  constructor(app: any, callbacks: ConsentDialogCallbacks) {
+  constructor(app: App, callbacks: ConsentDialogCallbacks) {
     super(app);
     this.callbacks = callbacks;
   }

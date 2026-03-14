@@ -24,7 +24,7 @@ export default class TerminalPlugin extends Plugin {
     this.settings = await loadSettings(this);
     this.logger = createLogger(this.settings.debugLog);
 
-    const vaultBasePath = (this.app.vault as any).adapter?.basePath || "";
+    const vaultBasePath = this.getVaultBasePath();
     const manifestDir = this.manifest.dir || "";
     // Build absolute plugin path without require("path") (esbuild externalizes it)
     const pluginDir = manifestDir
@@ -115,7 +115,7 @@ export default class TerminalPlugin extends Plugin {
         saveSettings(this, this.settings);
       },
       getLatestSettings: () => ({ ...this.settings }),
-      vaultPath: (this.app.vault as any).adapter?.basePath || "",
+      vaultPath: this.getVaultBasePath(),
       platform: process.platform,
       onSaveSettings: (updates: Partial<TerminalSettings>) => {
         this.updateSettings(updates);
@@ -135,6 +135,12 @@ export default class TerminalPlugin extends Plugin {
     const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
     if (leaves.length === 0) return null;
     return leaves[0].view as TerminalView;
+  }
+
+  /** Get the vault base path (Obsidian internal API, not in public typings) */
+  private getVaultBasePath(): string {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this.app.vault as any).adapter?.basePath || "";
   }
 
   private handleActiveLeafChange(leaf: WorkspaceLeaf | null): void {

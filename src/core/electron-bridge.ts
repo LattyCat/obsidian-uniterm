@@ -1,4 +1,4 @@
-import type { ElectronBridgeResult } from "../types";
+import type { ElectronBridgeResult, IPtyModule } from "../types";
 import { LOG_PREFIX } from "../constants";
 
 let cachedResult: ElectronBridgeResult | null = null;
@@ -33,7 +33,7 @@ export function loadNodePty(pluginDir?: string): ElectronBridgeResult {
   }
 
   try {
-    const pty = _internals.requireNodePty(pluginDir);
+    const pty = _internals.requireNodePty(pluginDir) as IPtyModule;
     cachedResult = { pty, error: null };
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : String(e);

@@ -1,4 +1,4 @@
-import type { PtySpawnOptions } from "../types";
+import type { PtySpawnOptions, IPtyInstance, IPtyModule } from "../types";
 import { SHUTDOWN_TIMEOUT_MS } from "../constants";
 
 /** Callback types for PTY events */
@@ -10,10 +10,10 @@ export class PtyProcess {
   private dataCallbacks: DataCallback[] = [];
   private exitCallbacks: ExitCallback[] = [];
   private exited = false;
-  private ptyInstance: any;
+  private ptyInstance: IPtyInstance;
   private disposables: { dispose: () => void }[] = [];
 
-  constructor(ptyInstance: any) {
+  constructor(ptyInstance: IPtyInstance) {
     this.ptyInstance = ptyInstance;
 
     const dataDisposable = ptyInstance.onData((data: string) => {
@@ -74,7 +74,13 @@ export class PtyProcess {
     }
 
     // Send SIGTERM first
-    this.ptyInstance.kill();
+    try {
+      this.ptyInstance.kill();
+    } catch {
+      // Process may already be dead
+      this.dispose();
+      return;
+    }
 
     // Wait for graceful exit or timeout
     const exited = await new Promise<boolean>((resolve) => {
@@ -95,7 +101,11 @@ export class PtyProcess {
 
     // Force kill if still running
     if (!exited) {
-      this.ptyInstance.kill("SIGKILL");
+      try {
+        this.ptyInstance.kill("SIGKILL");
+      } catch {
+        // Process may already be dead
+      }
     }
 
     this.dispose();
@@ -119,10 +129,10 @@ export class PtyProcess {
 
 /** Manages PTY process creation */
 export class PtyManager {
-  constructor(private ptyModule: any) {}
+  constructor(private ptyModule: IPtyModule) {}
 
   /** Spawn a new PTY process with the given options */
-  spawn(options: PtySpawnOptions): PtyProcess {
+  spawn(options: PtySpawnOptions): PtyProcess | null {
     // Electron renderer may have a minimal PATH; ensure common paths are included
     const home = process.env.HOME || "";
     const defaultPath = [
@@ -149,13 +159,17 @@ export class PtyManager {
       ? options.shell
       : `/bin/${options.shell}`;
 
-    const ptyInstance = this.ptyModule.spawn(shell, options.args, {
-      cwd: options.cwd,
-      cols: options.cols,
-      rows: options.rows,
-      env,
-    });
+    try {
+      const ptyInstance = this.ptyModule.spawn(shell, options.args, {
+        cwd: options.cwd,
+        cols: options.cols,
+        rows: options.rows,
+        env,
+      });
 
-    return new PtyProcess(ptyInstance);
+      return new PtyProcess(ptyInstance);
+    } catch {
+      return null;
+    }
   }
 }

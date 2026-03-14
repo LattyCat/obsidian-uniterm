@@ -65,7 +65,7 @@ describe("SessionManager", () => {
         createDefaultOptions()
       );
 
-      expect(info.state).toBe(SessionState.Running);
+      expect(info!.state).toBe(SessionState.Running);
     });
 
     it("assigns unique session IDs", () => {
@@ -78,7 +78,7 @@ describe("SessionManager", () => {
         createDefaultOptions()
       );
 
-      expect(info1.id).not.toBe(info2.id);
+      expect(info1!.id).not.toBe(info2!.id);
     });
   });
 
@@ -89,9 +89,9 @@ describe("SessionManager", () => {
         createDefaultOptions()
       );
 
-      const retrieved = sessionManager.getSession(created.id);
+      const retrieved = sessionManager.getSession(created!.id);
       expect(retrieved).not.toBeNull();
-      expect(retrieved!.id).toBe(created.id);
+      expect(retrieved!.id).toBe(created!.id);
       expect(retrieved!.state).toBe(SessionState.Running);
     });
 
@@ -127,16 +127,16 @@ describe("SessionManager", () => {
       const states: string[] = [];
       (mockPtyProcess.destroy as ReturnType<typeof vi.fn>).mockImplementation(
         async () => {
-          const session = sessionManager.getSession(info.id);
+          const session = sessionManager.getSession(info!.id);
           if (session) states.push(session.state);
         }
       );
 
-      await sessionManager.destroy(info.id);
+      await sessionManager.destroy(info!.id);
 
       expect(states).toContain(SessionState.ShuttingDown);
 
-      const afterDestroy = sessionManager.getSession(info.id);
+      const afterDestroy = sessionManager.getSession(info!.id);
       expect(afterDestroy!.state).toBe(SessionState.Destroyed);
     });
 
@@ -146,7 +146,7 @@ describe("SessionManager", () => {
         createDefaultOptions()
       );
 
-      await sessionManager.destroy(info.id);
+      await sessionManager.destroy(info!.id);
       expect(mockPtyProcess.destroy).toHaveBeenCalled();
     });
 
@@ -191,7 +191,7 @@ describe("SessionManager", () => {
       // Simulate the PTY process exiting
       mockPtyProcess._emitExit(0);
 
-      const session = sessionManager.getSession(info.id);
+      const session = sessionManager.getSession(info!.id);
       expect(session!.state).toBe(SessionState.Destroyed);
     });
   });
@@ -202,7 +202,7 @@ describe("SessionManager", () => {
         mockPtyManager,
         createDefaultOptions()
       );
-      const ptyProcess = sessionManager.getPtyProcess(info.id);
+      const ptyProcess = sessionManager.getPtyProcess(info!.id);
       expect(ptyProcess).not.toBeNull();
     });
 
@@ -218,7 +218,7 @@ describe("SessionManager", () => {
         createDefaultOptions()
       );
 
-      expect(sessionManager.getSession(info.id)!.state).toBe(
+      expect(sessionManager.getSession(info!.id)!.state).toBe(
         SessionState.Running
       );
 
@@ -226,15 +226,15 @@ describe("SessionManager", () => {
       (mockPtyProcess.destroy as ReturnType<typeof vi.fn>).mockImplementation(
         async () => {
           statesDuringDestroy.push(
-            sessionManager.getSession(info.id)!.state
+            sessionManager.getSession(info!.id)!.state
           );
         }
       );
 
-      await sessionManager.destroy(info.id);
+      await sessionManager.destroy(info!.id);
 
       expect(statesDuringDestroy).toEqual([SessionState.ShuttingDown]);
-      expect(sessionManager.getSession(info.id)!.state).toBe(
+      expect(sessionManager.getSession(info!.id)!.state).toBe(
         SessionState.Destroyed
       );
     });

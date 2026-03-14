@@ -16,9 +16,11 @@ export class SessionManager {
   create(
     ptyManager: PtyManager,
     options: PtySpawnOptions,
-  ): SessionInfo {
+  ): SessionInfo | null {
     const id = this.generateId();
     const ptyProcess = ptyManager.spawn(options);
+
+    if (!ptyProcess) return null;
 
     const info: SessionInfo = {
       id,

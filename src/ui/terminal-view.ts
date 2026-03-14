@@ -16,6 +16,7 @@ import type { SessionManager } from "../core/session-manager";
 import type { PtyManager, PtyProcess } from "../core/pty-manager";
 import type { Logger } from "../core/logger";
 import type { ShellType } from "../integration/drag-drop-handler";
+import type { ThemeColors } from "./theme-manager";
 
 export interface TerminalViewDeps {
   settings: TerminalSettings;
@@ -154,14 +155,7 @@ export class TerminalView extends ItemView {
     renderer.mount(this.containerPanel);
 
     // Apply theme
-    const themeColors =
-      settings.theme === "obsidian"
-        ? this.deps.themeManager.getObsidianTheme(document.body)
-        : this.deps.themeManager.getThemeColors(
-            settings.theme,
-            settings.customThemeColors,
-          );
-    renderer.getTerminal().options.theme = themeColors;
+    renderer.getTerminal().options.theme = this.resolveThemeColors(settings);
 
     // Create session
     const { cols, rows } = renderer.resize();
@@ -169,6 +163,15 @@ export class TerminalView extends ItemView {
       this.deps.ptyManager,
       { shell, args: shellArgs, cwd, cols, rows, env: {} },
     );
+
+    if (!sessionInfo) {
+      renderer.dispose();
+      showPtyLoadError(this.containerPanel, {
+        error: "Failed to spawn shell process",
+        onRetry: () => this.createSession(),
+      });
+      return;
+    }
 
     // Connect PTY
     const ptyProcess = this.deps.sessionManager.getPtyProcess(sessionInfo.id);
@@ -219,6 +222,8 @@ export class TerminalView extends ItemView {
       getShellType: () => this.detectShellType(shell),
       writeToPty: (data: string) => ptyProcess?.write(data),
       getInternalDragPath: () => {
+        // Obsidian internal API: dragManager is not in public typings
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const draggable = (this.app as any).dragManager?.draggable;
         return draggable?.file?.path ?? draggable?.path ?? null;
       },
@@ -270,8 +275,8 @@ export class TerminalView extends ItemView {
 
     try {
       this.renderer?.dispose();
-    } catch {
-      // Ignore xterm disposal errors
+    } catch (e) {
+      this.deps.logger.warn("xterm disposal error: " + (e instanceof Error ? e.message : String(e)));
     }
 
     this.renderer = null;
@@ -292,14 +297,7 @@ export class TerminalView extends ItemView {
   applyTheme(): void {
     if (!this.renderer) return;
     const settings = this.deps.getLatestSettings();
-    const themeColors =
-      settings.theme === "obsidian"
-        ? this.deps.themeManager.getObsidianTheme(document.body)
-        : this.deps.themeManager.getThemeColors(
-            settings.theme,
-            settings.customThemeColors,
-          );
-    this.renderer.getTerminal().options.theme = themeColors;
+    this.renderer.getTerminal().options.theme = this.resolveThemeColors(settings);
   }
 
   /** Clear the terminal */
@@ -330,13 +328,6 @@ export class TerminalView extends ItemView {
   /** Apply updated settings */
   applySettings(settings: TerminalSettings): void {
     if (!this.renderer) return;
-    const themeColors =
-      settings.theme === "obsidian"
-        ? this.deps.themeManager.getObsidianTheme(document.body)
-        : this.deps.themeManager.getThemeColors(
-            settings.theme,
-            settings.customThemeColors,
-          );
 
     const terminal = this.renderer.getTerminal();
     terminal.options.fontSize = settings.fontSize;
@@ -344,7 +335,7 @@ export class TerminalView extends ItemView {
     terminal.options.lineHeight = settings.lineHeight;
     terminal.options.cursorStyle = settings.cursorStyle;
     terminal.options.cursorBlink = settings.cursorBlink;
-    terminal.options.theme = themeColors;
+    terminal.options.theme = this.resolveThemeColors(settings);
 
     this.renderer.resize();
     if (this.ptyProcess) {
@@ -353,14 +344,13 @@ export class TerminalView extends ItemView {
     }
   }
 
-  /** Obsidian leaf state persistence — save */
-  getState(): Record<string, unknown> {
-    return {};
-  }
-
-  /** Obsidian leaf state persistence — restore */
-  async setState(_state: Record<string, unknown>, _result: any): Promise<void> {
-    // No state to restore
+  private resolveThemeColors(settings: TerminalSettings): ThemeColors {
+    return settings.theme === "obsidian"
+      ? this.deps.themeManager.getObsidianTheme(document.body)
+      : this.deps.themeManager.getThemeColors(
+          settings.theme,
+          settings.customThemeColors,
+        );
   }
 
   private resizeTerminal(): void {

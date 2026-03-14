@@ -1,3 +1,5 @@
+import type { TerminalView } from "../ui/terminal-view";
+
 export interface CommandCallbacks {
   toggleTerminal: () => void;
   focusTerminal: () => void;
@@ -6,7 +8,7 @@ export interface CommandCallbacks {
   findInTerminal: () => void;
   newTab: () => void;
   closeTab: () => void;
-  getActiveTerminalView: () => any | null;
+  getActiveTerminalView: () => TerminalView | null;
 }
 
 interface PluginLike {
@@ -18,6 +20,25 @@ interface PluginLike {
   }): void;
 }
 
+/** Add a command that only runs when a terminal view is active */
+function addCheckCommand(
+  plugin: PluginLike,
+  id: string,
+  name: string,
+  getView: () => TerminalView | null,
+  action: () => void,
+): void {
+  plugin.addCommand({
+    id,
+    name,
+    checkCallback: (checking: boolean) => {
+      if (!getView()) return false;
+      if (!checking) action();
+      return true;
+    },
+  });
+}
+
 /** Register all terminal commands with the Obsidian plugin */
 export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks): void {
   plugin.addCommand({
@@ -26,49 +47,12 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
     callback: () => callbacks.toggleTerminal(),
   });
 
-  plugin.addCommand({
-    id: "focus-terminal",
-    name: "Focus terminal",
-    checkCallback: (checking: boolean) => {
-      const view = callbacks.getActiveTerminalView();
-      if (!view) return false;
-      if (!checking) callbacks.focusTerminal();
-      return true;
-    },
-  });
+  const getView = callbacks.getActiveTerminalView;
 
-  plugin.addCommand({
-    id: "unfocus-terminal",
-    name: "Unfocus terminal",
-    checkCallback: (checking: boolean) => {
-      const view = callbacks.getActiveTerminalView();
-      if (!view) return false;
-      if (!checking) callbacks.unfocusTerminal();
-      return true;
-    },
-  });
-
-  plugin.addCommand({
-    id: "clear-terminal",
-    name: "Clear terminal",
-    checkCallback: (checking: boolean) => {
-      const view = callbacks.getActiveTerminalView();
-      if (!view) return false;
-      if (!checking) callbacks.clearTerminal();
-      return true;
-    },
-  });
-
-  plugin.addCommand({
-    id: "find-in-terminal",
-    name: "Find in terminal",
-    checkCallback: (checking: boolean) => {
-      const view = callbacks.getActiveTerminalView();
-      if (!view) return false;
-      if (!checking) callbacks.findInTerminal();
-      return true;
-    },
-  });
+  addCheckCommand(plugin, "focus-terminal", "Focus terminal", getView, () => callbacks.focusTerminal());
+  addCheckCommand(plugin, "unfocus-terminal", "Unfocus terminal", getView, () => callbacks.unfocusTerminal());
+  addCheckCommand(plugin, "clear-terminal", "Clear terminal", getView, () => callbacks.clearTerminal());
+  addCheckCommand(plugin, "find-in-terminal", "Find in terminal", getView, () => callbacks.findInTerminal());
 
   plugin.addCommand({
     id: "new-tab",
@@ -76,15 +60,5 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
     callback: () => callbacks.newTab(),
   });
 
-  plugin.addCommand({
-    id: "close-tab",
-    name: "Close terminal tab",
-    checkCallback: (checking: boolean) => {
-      const view = callbacks.getActiveTerminalView();
-      if (!view) return false;
-      if (!checking) callbacks.closeTab();
-      return true;
-    },
-  });
-
+  addCheckCommand(plugin, "close-tab", "Close terminal tab", getView, () => callbacks.closeTab());
 }

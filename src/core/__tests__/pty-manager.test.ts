@@ -84,6 +84,15 @@ describe("PtyManager", () => {
       expect(passedEnv.COLORTERM).toBe("truecolor");
     });
 
+    it("returns null when ptyModule.spawn() throws", () => {
+      mockPtyModule.spawn.mockImplementation(() => {
+        throw new Error("Invalid shell path");
+      });
+
+      const result = ptyManager.spawn(createDefaultOptions());
+      expect(result).toBeNull();
+    });
+
     it("merges process.env with custom env", () => {
       const options = createDefaultOptions({
         env: { MY_CUSTOM_VAR: "hello" },
@@ -101,7 +110,7 @@ describe("PtyManager", () => {
 
   describe("PtyProcess.resize()", () => {
     it("calls pty.resize(cols, rows)", () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
       proc.resize(120, 40);
       expect(mockPtyInstance.resize).toHaveBeenCalledWith(120, 40);
     });
@@ -109,7 +118,7 @@ describe("PtyManager", () => {
 
   describe("PtyProcess.write()", () => {
     it("calls pty.write(data)", () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
       proc.write("ls -la\n");
       expect(mockPtyInstance.write).toHaveBeenCalledWith("ls -la\n");
     });
@@ -118,7 +127,7 @@ describe("PtyManager", () => {
   describe("PtyProcess.destroy()", () => {
     it("sends kill signal, waits timeout, then calls kill(SIGKILL) and dispose", async () => {
       vi.useFakeTimers();
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
 
       const destroyPromise = proc.destroy();
 
@@ -138,8 +147,46 @@ describe("PtyManager", () => {
       vi.useRealTimers();
     });
 
+    it("completes normally when kill() throws (process already dead)", async () => {
+      vi.useFakeTimers();
+      const proc = ptyManager.spawn(createDefaultOptions())!;
+
+      // Simulate kill() throwing (e.g., process already terminated)
+      mockPtyInstance.kill.mockImplementation(() => {
+        throw new Error("Process already dead");
+      });
+
+      const destroyPromise = proc.destroy();
+      await vi.advanceTimersByTimeAsync(SHUTDOWN_TIMEOUT_MS);
+      await destroyPromise;
+
+      // Should complete without throwing
+      expect(proc.hasExited).toBe(false); // wasn't marked as exited, but destroy completed
+      vi.useRealTimers();
+    });
+
+    it("completes normally when SIGKILL throws after timeout", async () => {
+      vi.useFakeTimers();
+      const proc = ptyManager.spawn(createDefaultOptions())!;
+
+      // First kill (SIGTERM) succeeds, second (SIGKILL) throws
+      let callCount = 0;
+      mockPtyInstance.kill.mockImplementation(() => {
+        callCount++;
+        if (callCount === 2) throw new Error("SIGKILL failed");
+      });
+
+      const destroyPromise = proc.destroy();
+      await vi.advanceTimersByTimeAsync(SHUTDOWN_TIMEOUT_MS);
+      await destroyPromise;
+
+      // Should complete without throwing
+      expect(callCount).toBe(2);
+      vi.useRealTimers();
+    });
+
     it("resolves immediately if process already exited", async () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
 
       // Simulate the process already having exited
       mockPtyInstance._emitExit(0);
@@ -153,7 +200,7 @@ describe("PtyManager", () => {
 
   describe("PtyProcess.onData()", () => {
     it("receives PTY output", () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
       const callback = vi.fn();
       proc.onData(callback);
 
@@ -162,14 +209,14 @@ describe("PtyManager", () => {
     });
 
     it("returns a disposable object", () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
       const disposable = proc.onData(vi.fn());
       expect(disposable).toHaveProperty("dispose");
       expect(typeof disposable.dispose).toBe("function");
     });
 
     it("dispose removes the callback", () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
       const callback = vi.fn();
       const disposable = proc.onData(callback);
       disposable.dispose();
@@ -180,7 +227,7 @@ describe("PtyManager", () => {
 
   describe("PtyProcess.onExit()", () => {
     it("receives exit code and signal", () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
       const callback = vi.fn();
       proc.onExit(callback);
 
@@ -189,7 +236,7 @@ describe("PtyManager", () => {
     });
 
     it("returns a disposable object from onExit", () => {
-      const proc = ptyManager.spawn(createDefaultOptions());
+      const proc = ptyManager.spawn(createDefaultOptions())!;
       const disposable = proc.onExit(vi.fn());
       expect(disposable).toHaveProperty("dispose");
       expect(typeof disposable.dispose).toBe("function");

@@ -149,6 +149,21 @@
   justify-content: flex-end;
 }
 
+/* --- Resize Handle --- */
+
+.terminal-resize-handle {
+  height: 4px;
+  cursor: ns-resize;
+  background: transparent;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+
+.terminal-resize-handle:hover,
+.terminal-resize-handle.dragging {
+  background: var(--interactive-accent);
+}
+
 /* --- Drag & Drop Feedback --- */
 
 .terminal-drag-over {

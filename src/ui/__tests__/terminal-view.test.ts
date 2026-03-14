@@ -10,6 +10,7 @@ import { SearchBar } from "../search-bar";
 import { ConsentModal } from "../consent-dialog";
 import { showPtyLoadError } from "../error-display";
 import { DragDropHandler } from "../../integration/drag-drop-handler";
+import { ResizeHandle } from "../resize-handle";
 import { detectDefaultShell } from "../../core/shell-detector";
 
 vi.mock("../terminal-renderer", () => ({
@@ -40,6 +41,9 @@ vi.mock("../../core/shell-detector", () => ({
 vi.mock("../../integration/drag-drop-handler", () => ({
   DragDropHandler: vi.fn(),
 }));
+vi.mock("../resize-handle", () => ({
+  ResizeHandle: vi.fn(),
+}));
 
 // ResizeObserver mock (jsdom doesn't have it)
 const mockResizeObserverInstance = {
@@ -59,6 +63,7 @@ describe("TerminalView", () => {
   let mockSearchInstance: any;
   let mockConsentInstance: any;
   let mockDragDropInstance: any;
+  let mockResizeHandleInstance: any;
   let mockPtyProcess: any;
 
   beforeEach(() => {
@@ -115,6 +120,11 @@ describe("TerminalView", () => {
       dispose: vi.fn(),
     };
     (DragDropHandler as any).mockImplementation(() => mockDragDropInstance);
+
+    mockResizeHandleInstance = {
+      dispose: vi.fn(),
+    };
+    (ResizeHandle as any).mockImplementation(() => mockResizeHandleInstance);
 
     mockPtyProcess = {
       onData: vi.fn(() => ({ dispose: vi.fn() })),

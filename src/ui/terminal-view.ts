@@ -8,6 +8,8 @@ import { ThemeManager } from "./theme-manager";
 import { showPtyLoadError } from "./error-display";
 import { ConsentModal } from "./consent-dialog";
 import { DragDropHandler } from "../integration/drag-drop-handler";
+import { ResizeHandle } from "./resize-handle";
+import { MIN_PANEL_HEIGHT, MAX_PANEL_HEIGHT_RATIO } from "../constants";
 import { detectDefaultShell } from "../core/shell-detector";
 import type { TerminalSettings, ShellProfile } from "../types";
 import type { SessionManager } from "../core/session-manager";
@@ -42,6 +44,7 @@ export class TerminalView extends ItemView {
   private keybindingHandler: KeybindingHandler | null = null;
   private focusManager: FocusManager | null = null;
   private dragDropHandler: DragDropHandler | null = null;
+  private resizeHandle: ResizeHandle | null = null;
   private sessionId: string | null = null;
   private profile: ShellProfile | null = null;
 
@@ -113,6 +116,14 @@ export class TerminalView extends ItemView {
       this.resizeTerminal();
     });
     this.resizeObserver.observe(this.containerPanel);
+
+    // Restore saved panel height (only if user has explicitly resized)
+    if (settings.panelHeight && settings.panelHeight !== 300 && this.containerPanel.closest) {
+      const leafEl = this.containerPanel.closest(".workspace-leaf") as HTMLElement | null;
+      if (leafEl) {
+        ResizeHandle.applyHeightToLeaf(leafEl, settings.panelHeight);
+      }
+    }
 
     // Create the single terminal session
     this.createSession(this.pendingProfile);
@@ -230,6 +241,18 @@ export class TerminalView extends ItemView {
       },
     });
 
+    // Resize handle
+    const resizeHandle = new ResizeHandle({
+      container: this.containerPanel,
+      initialHeight: settings.panelHeight,
+      minHeight: MIN_PANEL_HEIGHT,
+      maxHeightRatio: MAX_PANEL_HEIGHT_RATIO,
+      onResize: () => this.resizeTerminal(),
+      onResizeEnd: (height: number) => {
+        this.deps.onSaveSettings?.({ panelHeight: height });
+      },
+    });
+
     // Click-to-focus
     this.containerPanel.addEventListener("click", () => {
       focusManager.focus();
@@ -242,6 +265,7 @@ export class TerminalView extends ItemView {
     this.keybindingHandler = keybindingHandler;
     this.focusManager = focusManager;
     this.dragDropHandler = dragDropHandler;
+    this.resizeHandle = resizeHandle;
     this.sessionId = sessionInfo.id;
   }
 
@@ -258,6 +282,7 @@ export class TerminalView extends ItemView {
     // Dispose components
     this.searchBar?.dispose();
     this.dragDropHandler?.dispose();
+    this.resizeHandle?.dispose();
     this.focusManager?.dispose();
 
     try {
@@ -271,6 +296,7 @@ export class TerminalView extends ItemView {
     this.keybindingHandler = null;
     this.focusManager = null;
     this.dragDropHandler = null;
+    this.resizeHandle = null;
     this.sessionId = null;
 
     if (this.containerPanel) {

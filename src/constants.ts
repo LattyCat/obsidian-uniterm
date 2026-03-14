@@ -2,7 +2,7 @@ import type { TerminalSettings, PassthroughKeybinding, CustomThemeColors } from 
 
 export const VIEW_TYPE_TERMINAL = "terminal-view";
 
-export const LOG_PREFIX = "[obsidian-terminal]";
+export const LOG_PREFIX = "[obsidian-uniterm]";
 
 export const SHUTDOWN_TIMEOUT_MS = 3000;
 

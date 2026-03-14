@@ -186,10 +186,10 @@ describe("TerminalView", () => {
   });
 
   describe("getDisplayText()", () => {
-    it('returns "Terminal"', () => {
+    it('returns "UniTerm"', () => {
       const deps = createMockDeps();
       const view = new TerminalView(mockLeaf as any, deps);
-      expect(view.getDisplayText()).toBe("Terminal");
+      expect(view.getDisplayText()).toBe("UniTerm");
     });
   });
 
@@ -356,7 +356,7 @@ describe("TerminalView", () => {
       const addActionSpy = vi.spyOn(view, "addAction" as any);
       await view.onOpen();
 
-      expect(addActionSpy).toHaveBeenCalledWith("plus", "New Terminal Tab", expect.any(Function));
+      expect(addActionSpy).toHaveBeenCalledWith("plus", "New terminal tab", expect.any(Function));
     });
 
     it("uses detectDefaultShell when settings.defaultShell is empty", async () => {

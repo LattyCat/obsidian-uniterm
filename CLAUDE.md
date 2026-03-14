@@ -1,4 +1,4 @@
-# Obsidian Terminal Plugin
+# UniTerm — Obsidian Terminal Plugin
 
 ## Project Overview
 Obsidian内にVSCode風の統合ターミナルを提供するコミュニティプラグイン。
@@ -57,5 +57,5 @@ npm run test     # vitest run
 - No default exports except `src/main.ts` (Obsidian requirement)
 - Prefer composition over inheritance
 - All public APIs must have TypeScript types
-- Log format: `[obsidian-terminal] {level}: {message}`
+- Log format: `[obsidian-uniterm] {level}: {message}`
 - Error handling: return null + error message, don't throw in library code

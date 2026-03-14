@@ -22,13 +22,13 @@ interface PluginLike {
 export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks): void {
   plugin.addCommand({
     id: "toggle-terminal",
-    name: "Toggle Terminal Panel",
+    name: "Toggle terminal panel",
     callback: () => callbacks.toggleTerminal(),
   });
 
   plugin.addCommand({
     id: "focus-terminal",
-    name: "Focus Terminal",
+    name: "Focus terminal",
     checkCallback: (checking: boolean) => {
       const view = callbacks.getActiveTerminalView();
       if (!view) return false;
@@ -39,7 +39,7 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
 
   plugin.addCommand({
     id: "unfocus-terminal",
-    name: "Unfocus Terminal",
+    name: "Unfocus terminal",
     checkCallback: (checking: boolean) => {
       const view = callbacks.getActiveTerminalView();
       if (!view) return false;
@@ -50,7 +50,7 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
 
   plugin.addCommand({
     id: "clear-terminal",
-    name: "Clear Terminal",
+    name: "Clear terminal",
     checkCallback: (checking: boolean) => {
       const view = callbacks.getActiveTerminalView();
       if (!view) return false;
@@ -61,7 +61,7 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
 
   plugin.addCommand({
     id: "find-in-terminal",
-    name: "Find in Terminal",
+    name: "Find in terminal",
     checkCallback: (checking: boolean) => {
       const view = callbacks.getActiveTerminalView();
       if (!view) return false;
@@ -72,13 +72,13 @@ export function registerCommands(plugin: PluginLike, callbacks: CommandCallbacks
 
   plugin.addCommand({
     id: "new-tab",
-    name: "New Terminal Tab",
+    name: "New terminal tab",
     callback: () => callbacks.newTab(),
   });
 
   plugin.addCommand({
     id: "close-tab",
-    name: "Close Terminal Tab",
+    name: "Close terminal tab",
     checkCallback: (checking: boolean) => {
       const view = callbacks.getActiveTerminalView();
       if (!view) return false;

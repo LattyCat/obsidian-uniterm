@@ -178,7 +178,7 @@ describe("TerminalPlugin", () => {
       await plugin.onload();
       expect(addRibbonIconSpy).toHaveBeenCalledWith(
         "terminal",
-        "Open Terminal",
+        "Open UniTerm",
         expect.any(Function)
       );
     });

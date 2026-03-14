@@ -58,7 +58,7 @@ export default class TerminalPlugin extends Plugin {
       getActiveTerminalView: () => this.getActiveTerminalView(),
     });
 
-    this.addRibbonIcon("terminal", "Open Terminal", () => {
+    this.addRibbonIcon("terminal", "Open UniTerm", () => {
       this.toggleTerminalPanel();
     });
 

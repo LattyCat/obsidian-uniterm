@@ -30,7 +30,7 @@ describe("registerCommands", () => {
       (c: any) => c[0].id === "toggle-terminal"
     );
     expect(cmd).toBeDefined();
-    expect(cmd![0].name).toBe("Toggle Terminal Panel");
+    expect(cmd![0].name).toBe("Toggle terminal panel");
   });
 
   it("toggle-terminal callback calls toggleTerminal", () => {

@@ -58,7 +58,7 @@ export class TerminalView extends ItemView {
   }
 
   getDisplayText(): string {
-    return "Terminal";
+    return "UniTerm";
   }
 
   getIcon(): string {
@@ -99,14 +99,14 @@ export class TerminalView extends ItemView {
 
     // Header action: "+" button to create a new terminal tab
     if (this.deps.onNewTerminalTab) {
-      this.addAction("plus", "New Terminal Tab", () => {
+      this.addAction("plus", "New terminal tab", () => {
         this.deps.onNewTerminalTab!();
       });
     }
 
     // ARIA
     this.containerPanel.setAttribute("role", "application");
-    this.containerPanel.setAttribute("aria-label", "Terminal");
+    this.containerPanel.setAttribute("aria-label", "UniTerm");
 
     // ResizeObserver
     this.resizeObserver = new ResizeObserver(() => {

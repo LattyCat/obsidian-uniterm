@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-terminal",
+  "name": "obsidian-uniterm",
   "version": "1.0.0",
-  "description": "Integrated terminal with AI agent support for Obsidian",
+  "description": "UniTerm — Unified terminal experience inside Obsidian",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

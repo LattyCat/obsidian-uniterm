@@ -1,9 +1,9 @@
 {
-  "id": "obsidian-terminal",
-  "name": "Terminal",
+  "id": "obsidian-uniterm",
+  "name": "UniTerm",
   "version": "1.0.0-beta.1",
   "minAppVersion": "1.5.0",
-  "description": "Integrated terminal with AI agent support for Obsidian",
+  "description": "UniTerm — Unified terminal experience inside Obsidian",
   "author": "Atsushi",
   "isDesktopOnly": true
 }

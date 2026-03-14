@@ -1,6 +1,6 @@
-# Obsidian Terminal Plugin 仕様書
+# UniTerm Plugin 仕様書
 
-**プラグイン名:** Obsidian Terminal (仮称)
+**プラグイン名:** UniTerm
 **バージョン:** v1.0.0
 **最終更新:** 2026-03-09
 **ステータス:** 設計フェーズ
@@ -109,7 +109,7 @@ Obsidian内にVSCode風の統合ターミナルを提供するコミュニティ
 ### 2.3 ディレクトリ構成
 
 ```
-obsidian-terminal/
+obsidian-uniterm/
 ├── src/
 │   ├── main.ts                  # Plugin エントリポイント
 │   ├── constants.ts             # 定数定義
@@ -181,7 +181,7 @@ obsidian-terminal/
   - `console.warn`: 回復可能なエラー（WebGLフォールバック、シェルフォールバック）
   - `console.info`: 重要なライフサイクルイベント（セッション作成/破棄、プラグインロード/アンロード）
   - `console.debug`: 詳細デバッグ情報（データフロー、リサイズイベント）— デフォルト無効、設定で有効化
-- **フォーマット:** `[obsidian-terminal] {レベル}: {メッセージ}` のプレフィックス付き
+- **フォーマット:** `[obsidian-uniterm] {レベル}: {メッセージ}` のプレフィックス付き
 
 ---
 
@@ -440,7 +440,7 @@ interface ShellProfile {
 > - シェルのrcファイル（`.bashrc`、`.zshrc`等）で `export` する
 > - プロジェクトルートの `.env` ファイルに定義し、`source .env` や `direnv` 等で読み込む
 >
-> **⚠ セキュリティ警告:** プロファイルの環境変数にAPIキーやトークンを直接保存した場合、Vaultの `.obsidian/plugins/obsidian-terminal/data.json` にプレーンテキストで保存される。機密情報は必ず `.env` ファイルやシステムのキーチェーン経由で管理すること。
+> **⚠ セキュリティ警告:** プロファイルの環境変数にAPIキーやトークンを直接保存した場合、Vaultの `.obsidian/plugins/obsidian-uniterm/data.json` にプレーンテキストで保存される。機密情報は必ず `.env` ファイルやシステムのキーチェーン経由で管理すること。
 
 **プリセットプロファイル例:**
 
@@ -950,11 +950,11 @@ prebuilds/             # node-ptyプリビルドバイナリ
 ```json
 // manifest.json
 {
-  "id": "obsidian-terminal",
-  "name": "Terminal",
+  "id": "obsidian-uniterm",
+  "name": "UniTerm",
   "version": "1.0.0",
   "minAppVersion": "1.5.0",
-  "description": "Integrated terminal with AI agent support for Obsidian",
+  "description": "UniTerm — Unified terminal experience inside Obsidian",
   "author": "Atsushi",
   "isDesktopOnly": true
 }
@@ -963,11 +963,11 @@ prebuilds/             # node-ptyプリビルドバイナリ
 ```json
 // manifest-beta.json（BRAT用）
 {
-  "id": "obsidian-terminal",
-  "name": "Terminal (Beta)",
+  "id": "obsidian-uniterm",
+  "name": "UniTerm (Beta)",
   "version": "0.9.0-beta.1",
   "minAppVersion": "1.5.0",
-  "description": "Integrated terminal with AI agent support for Obsidian (Beta)",
+  "description": "UniTerm — Unified terminal experience inside Obsidian (Beta)",
   "author": "Atsushi",
   "isDesktopOnly": true
 }

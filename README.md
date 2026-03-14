@@ -1,6 +1,6 @@
-# Obsidian Terminal
+# UniTerm
 
-Obsidian内にVSCode風の統合ターミナルを提供するコミュニティプラグイン。
+Unified terminal experience inside Obsidian.
 
 OSネイティブシェルを直接実行し、AIコーディングエージェント（Claude Code / Codex CLI / Gemini CLI）の快適な操作を第一級でサポートする。
 
@@ -21,20 +21,20 @@ OSネイティブシェルを直接実行し、AIコーディングエージェ�
 ### BRAT (Beta)
 
 1. [BRAT](https://github.com/TfTHacker/obsidian42-brat) プラグインをインストール
-2. BRAT設定で `LattyCat/obsidian-terminal` を追加
+2. BRAT設定で `LattyCat/obsidian-uniterm` を追加
 3. プラグインを有効化
 
 ### Manual
 
-1. [Releases](https://github.com/LattyCat/obsidian-terminal/releases) から `main.js`, `manifest.json`, `styles.css` をダウンロード
-2. Vault の `.obsidian/plugins/obsidian-terminal/` に配置
+1. [Releases](https://github.com/LattyCat/obsidian-uniterm/releases) から `main.js`, `manifest.json`, `styles.css` をダウンロード
+2. Vault の `.obsidian/plugins/obsidian-uniterm/` に配置
 3. Obsidianを再起動し、プラグインを有効化
 
 ## Usage
 
 ### ターミナルを開く
 
-- コマンドパレット: `Terminal: Toggle terminal panel`
+- コマンドパレット: `UniTerm: Toggle terminal panel`
 - リボンアイコン（ターミナルアイコン）をクリック
 
 ### キーバインド
@@ -50,11 +50,11 @@ OSネイティブシェルを直接実行し、AIコーディングエージェ�
 
 ### コマンドパレット
 
-- `Terminal: Toggle terminal panel` — パネルの表示/非表示
-- `Terminal: Focus terminal` — ターミナルにフォーカス移動
-- `Terminal: Unfocus terminal` — フォーカス解除
-- `Terminal: Clear terminal` — 画面クリア
-- `Terminal: Find in terminal` — 検索バー表示
+- `UniTerm: Toggle terminal panel` — パネルの表示/非表示
+- `UniTerm: Focus terminal` — ターミナルにフォーカス移動
+- `UniTerm: Unfocus terminal` — フォーカス解除
+- `UniTerm: Clear terminal` — 画面クリア
+- `UniTerm: Find in terminal` — 検索バー表示
 
 ## Status
 

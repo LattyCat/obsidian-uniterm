@@ -17,8 +17,8 @@ describe("VIEW_TYPE_TERMINAL", () => {
 });
 
 describe("LOG_PREFIX", () => {
-  it("follows the [obsidian-terminal] format", () => {
-    expect(LOG_PREFIX).toBe("[obsidian-terminal]");
+  it("follows the [obsidian-uniterm] format", () => {
+    expect(LOG_PREFIX).toBe("[obsidian-uniterm]");
   });
 });
 

@@ -80,20 +80,13 @@ export default class TerminalPlugin extends Plugin {
   }
 
   async toggleTerminalPanel(): Promise<void> {
-    const existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_TERMINAL);
-
-    if (existing.length > 0) {
-      this.app.workspace.revealLeaf(existing[0]);
-    } else {
-      // Open in bottom panel (like VSCode's integrated terminal)
-      const leaf = this.app.workspace.getLeaf("split", "horizontal");
-      if (leaf) {
-        await leaf.setViewState({
-          type: VIEW_TYPE_TERMINAL,
-          active: true,
-        });
-        this.app.workspace.revealLeaf(leaf);
-      }
+    const leaf = this.app.workspace.getLeaf("split", "horizontal");
+    if (leaf) {
+      await leaf.setViewState({
+        type: VIEW_TYPE_TERMINAL,
+        active: true,
+      });
+      this.app.workspace.revealLeaf(leaf);
     }
   }
 

@@ -50,6 +50,7 @@ export class TerminalView extends ItemView {
   constructor(leaf: WorkspaceLeaf, deps: TerminalViewDeps) {
     super(leaf);
     this.deps = deps;
+    this.navigation = false;
   }
 
   getViewType(): string {
